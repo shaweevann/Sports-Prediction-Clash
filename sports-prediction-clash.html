@@ -335,16 +335,16 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   <footer class="slip glass">
     <div class="slip-row">
       <div class="stakes" id="stakes" role="group" aria-label="Stake">
-        <button data-s="1">$1</button><button data-s="5">$5</button><button data-s="10">$10</button><button data-s="25">$25</button>
+        <button data-s="10">10</button><button data-s="50">50</button><button data-s="100">100</button><button data-s="250">250</button>
       </div>
-      <div class="bank">Bank <b id="bank">$100.00</b> · <span id="rec">0–0</span></div>
+      <div class="bank"><b id="bank">🏆 1,000</b> · <span id="rec">0–0</span></div>
     </div>
     <div class="slip-main">
       <button class="legsbtn" id="legsBtn" aria-label="Show slip"><b id="legN">0</b><small>picks</small></button>
       <div class="multi"><span class="heat" id="heat"><span class="x" id="mult">×—</span></span><small id="pays">Swipe a market to start your slip</small></div>
       <button class="snap" id="snap">Snap</button>
     </div>
-    <div class="fine">Play money prototype · Prices in ¢ per $1 contract</div>
+    <div class="fine">Play for trophies · No real money</div>
   </footer>
   </div>
 
@@ -381,7 +381,10 @@ function reseed(key) { rng = makeRng(key); }
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const randn = () => { let u = 0, v = 0; while (!u) u = R(); while (!v) v = R(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
 const fmtClock = s => `${Math.floor(s / 60)}:${String(Math.max(0, Math.round(s % 60))).padStart(2, "0")}`;
-const money = v => `$${v.toFixed(2)}`;
+/** Trophies are whole numbers, shown with grouping, like "🏆 1,250". */
+const trophies = v => `🏆 ${Math.floor(v).toLocaleString("en-US")}`;
+/** What a winning slip pays, rounded down to whole trophies. */
+const payout = (stk, mult) => Math.floor(stk * mult);
 const $ = id => document.getElementById(id);
 
 const T = [
@@ -395,7 +398,7 @@ const FEED_SIZE = 20;     // markets shown per drive
 const BAND = [0.05, 0.95];// fair probability range a market must sit in to be listed
 const MAX_LONGSHOTS = 4;  // markets priced under 15% or over 85% allowed in one feed
 const MAX_LEGS = 8;
-const MAX_MULT = 500;     // $25 stake tops out at $12,500
+const MAX_MULT = 500;     // a 250-trophy stake tops out at 125,000
 const MIN_STEP = 1.05;    // a pick must raise the multiplier at least this much
 const PHI_MAX = 0.5;      // max correlation between two markets in the same feed
 const MIN_COND = 0.04;    // every YES/NO pairing of two feed markets must stay at least this possible
@@ -683,13 +686,13 @@ const gameNow = () => `g${Math.floor(Date.now() / GAME_MS)}`;
 const gameLabel = id => { const t = new Date(+id.slice(1) * GAME_MS), f = d => d.toLocaleTimeString([], { hour: "numeric" }); return `${f(t)}–${f(new Date(t.getTime() + GAME_MS))} game`; };
 const freshGame = () => ({ score: [0, 0], qtr: 1, clock: 900, off: 0, yl: 25, drive: 1, firstReceiver: 0, over: false, gameId: gameNow() });
 const G = freshGame();
-let M = [], slip = [], stake = 5, phase = "market", timeLeft = MARKET_SECS, tickId = 0, secId = 0, liveId = 0;
-let bank = 100, rec = { w: 0, l: 0 };
+let M = [], slip = [], stake = 50, phase = "market", timeLeft = MARKET_SECS, tickId = 0, secId = 0, liveId = 0;
+let bank = 1000, rec = { w: 0, l: 0 };
 try {
-  const sv = JSON.parse(localStorage.getItem("sportspredictionclash") || localStorage.getItem("snapmarket") || "null");
-  if (sv) { bank = sv.bank; rec = sv.rec; stake = sv.stake || 5; if (sv.game && sv.game.gameId === G.gameId) Object.assign(G, sv.game); }
+  const sv = JSON.parse(localStorage.getItem("sportspredictionclash.trophies") || "null");
+  if (sv) { bank = sv.bank; rec = sv.rec; stake = sv.stake || 50; if (sv.game && sv.game.gameId === G.gameId) Object.assign(G, sv.game); }
 } catch (e) {}
-const save = () => { try { localStorage.setItem("sportspredictionclash", JSON.stringify({ bank, rec, stake, game: G })); } catch (e) {} };
+const save = () => { try { localStorage.setItem("sportspredictionclash.trophies", JSON.stringify({ bank, rec, stake, game: G })); } catch (e) {} };
 
 const spotTxt = (yl, off) => yl === 50 ? "midfield" : yl < 50 ? `own ${yl}` : `${T[1 - off].abbr} ${100 - yl}`;
 const ord = n => ["1st", "2nd", "3rd", "4th"][n - 1] || `${n}th`;
@@ -765,12 +768,12 @@ function paintCard(m) {
   q("[data-ch]").textContent = `${Math.round(m.mid)}%`;
   const d = Math.round(m.mid - m.open), chg = q("[data-chg]");
   chg.textContent = d === 0 ? "flat" : `${d > 0 ? "▲" : "▼"}${Math.abs(d)}`; chg.className = `chg ${d > 0 ? "up" : d < 0 ? "dn" : ""}`;
-  q("[data-vol]").textContent = `$${(m.vol / 1000).toFixed(1)}k vol`;
-  q("[data-ya]").textContent = `${leg && leg.side === "yes" ? leg.price : ya}¢`;
-  q("[data-na]").textContent = `${leg && leg.side === "no" ? leg.price : na}¢`;
+  q("[data-vol]").textContent = `🏆 ${(m.vol / 100).toFixed(1)}k in play`;
+  q("[data-ya]").textContent = `×${fmtMult(100 / (leg && leg.side === "yes" ? leg.price : ya))}`;
+  q("[data-na]").textContent = `×${fmtMult(100 / (leg && leg.side === "no" ? leg.price : na))}`;
   const pv = side => {
     if (leg && leg.side === side) return "Picked · tap to remove";
-    if (!slip.length || (slip.length === 1 && leg)) return `pays ${(100 / (side === "yes" ? ya : na)).toFixed(2)}×`;
+    if (!slip.length || (slip.length === 1 && leg)) return `wins ${trophies(payout(stake, 100 / (side === "yes" ? ya : na)))}`;
     const r = tryLegs(m, side);
     return r.err ? r.short : `slip → ×${fmtMult(r.mult)}`;
   };
@@ -824,7 +827,7 @@ function pick(m, side) {
     slip = r.trial;
     m.mid = clamp(m.mid + (side === "yes" ? 1.2 : -1.2), 2, 98); // your order moves the book
     m.vol += stake;
-    note(m, `Added ${side.toUpperCase()} at ${r.leg.price}¢`);
+    note(m, `Added ${side.toUpperCase()} at ×${fmtMult(100 / r.leg.price)}`);
     bumpMult();
     const i = M.indexOf(m);
     setTimeout(() => {
@@ -889,21 +892,21 @@ function paintSlip() {
   paintHeat(mult);
   $("legN").textContent = slip.length;
   $("mult").textContent = slip.length ? `×${fmtMult(mult)}` : "×—";
-  const pays = stake * mult;
+  const pays = payout(stake, mult);
   if (phase === "market") {
-    $("pays").textContent = slip.length ? `${money(stake)} pays ${money(pays)} if all ${slip.length} hit` : "Swipe a market to start your slip";
+    $("pays").textContent = slip.length ? `${trophies(stake)} pays ${trophies(pays)} if all ${slip.length} hit` : "Swipe a market to start your slip";
     $("snap").textContent = slip.length ? "Snap" : "Watch";
     $("snap").disabled = slip.length > 0 && stake > bank;
-    if (slip.length && stake > bank) $("pays").textContent = "Stake is more than your bank. Lower it.";
+    if (slip.length && stake > bank) $("pays").textContent = "Not enough trophies. Lower your stake.";
   }
-  $("bank").textContent = money(bank);
+  $("bank").textContent = trophies(bank);
   $("rec").textContent = `${rec.w}–${rec.l}`;
   document.querySelectorAll("#stakes button").forEach(b => { b.classList.toggle("on", +b.dataset.s === stake); b.disabled = phase !== "market"; });
-  const em = $("endMult"); if (em) { em.textContent = slip.length ? `×${fmtMult(mult)}` : "×—"; $("endPays").textContent = slip.length ? `${slip.length} picks · ${money(stake)} pays ${money(pays)}` : "No picks yet. Scroll back up, or just watch this drive."; }
+  const em = $("endMult"); if (em) { em.textContent = slip.length ? `×${fmtMult(mult)}` : "×—"; $("endPays").textContent = slip.length ? `${slip.length} picks · ${trophies(stake)} pays ${trophies(pays)}` : "No picks yet. Scroll back up, or just watch this drive."; }
   // sheet
-  $("sheetLegs").innerHTML = slip.length ? slip.map((l, i) => `<li class="leg"><span class="sd ${l.side}">${l.side.toUpperCase()}</span><span>${l.m.q}</span><span class="st">${l.price}¢ ${phase === "market" ? `<button class="x" data-rm="${i}" aria-label="Remove">×</button>` : ""}</span></li>`).join("") : `<li class="leg"><span></span><span>No picks yet. Swipe right for YES, left for NO.</span><span></span></li>`;
+  $("sheetLegs").innerHTML = slip.length ? slip.map((l, i) => `<li class="leg"><span class="sd ${l.side}">${l.side.toUpperCase()}</span><span>${l.m.q}</span><span class="st">×${fmtMult(100 / l.price)} ${phase === "market" ? `<button class="x" data-rm="${i}" aria-label="Remove">×</button>` : ""}</span></li>`).join("") : `<li class="leg"><span></span><span>No picks yet. Swipe right for YES, left for NO.</span><span></span></li>`;
   $("sheetLegs").querySelectorAll("[data-rm]").forEach(b => b.addEventListener("click", () => { const l = slip[+b.dataset.rm]; pick(l.m, l.side); }));
-  $("sheetMath").innerHTML = slip.length ? `Market payouts multiplied: <b>×${fmtMult(naive)}</b><br>Correlation adjustment: <b>×${corr.toFixed(2)}</b> ${corr < 0.98 ? "(your picks tend to happen together, so the combo is likelier than it looks)" : corr > 1.02 ? "(your picks rarely happen together, so the combo pays more)" : ""}<br>Slip multiplier: <b>×${fmtMult(mult)}</b> of ×${MAX_MULT} max · ${money(stake)} pays <b>${money(pays)}</b><br>Model fair odds: <b>×${fmtMult(1 / joint(slip).p)}</b> · House edge <b>${((1 - mult * joint(slip).p) * 100).toFixed(1)}%</b>` : "";
+  $("sheetMath").innerHTML = slip.length ? `Market payouts multiplied: <b>×${fmtMult(naive)}</b><br>Correlation adjustment: <b>×${corr.toFixed(2)}</b> ${corr < 0.98 ? "(your picks tend to happen together, so the combo is likelier than it looks)" : corr > 1.02 ? "(your picks rarely happen together, so the combo pays more)" : ""}<br>Slip multiplier: <b>×${fmtMult(mult)}</b> of ×${MAX_MULT} max · ${trophies(stake)} pays <b>${trophies(pays)}</b><br>Model fair odds: <b>×${fmtMult(1 / joint(slip).p)}</b> · House edge <b>${((1 - mult * joint(slip).p) * 100).toFixed(1)}%</b>` : "";
 }
 
 /* ---------------- Phases ---------------- */
@@ -937,7 +940,7 @@ function tick() {
 
 function snap() {
   if (phase !== "market") return;
-  if (slip.length && stake > bank) { toast("Lower your stake first."); return; }
+  if (slip.length && stake > bank) { toast("Not enough trophies. Lower your stake first."); return; }
   clearInterval(tickId); clearInterval(secId);
   phase = "live";
   if (slip.length) { bank -= stake; save(); }
@@ -993,7 +996,7 @@ function paintLive(st) {
     : `<li class="leg"><span></span><span>No slip this drive. Just watching.</span><span></span></li>`;
   if (phase === "live" && slip.length) {
     const lost = slip.find(l => l.status === "lost"), won = slip.filter(l => l.status === "won").length;
-    $("pays").textContent = lost ? `Busted: ${lost.m.q}` : `${won} of ${slip.length} hit · pays ${money(stake * multOf(slip).mult)}`;
+    $("pays").textContent = lost ? `Busted: ${lost.m.q}` : `${won} of ${slip.length} hit · pays ${trophies(payout(stake, multOf(slip).mult))}`;
   }
   paintHeat(multOf(slip).mult);
 }
@@ -1007,22 +1010,22 @@ function endDrive(res) {
   const sum = `${T[off].abbr}: ${resultTxt[st.result]} · ${st.plays} plays, ${st.yards} yds, ${fmtClock(st.time)}`;
   if (!slip.length) { r.className = "result"; r.innerHTML = `<h3>${resultTxt[st.result]}</h3><p>${sum}</p>`; }
   else if (slip.every(l => l.status === "won")) {
-    const win = stake * multOf(slip).mult; bank += win; rec.w++;
-    r.className = "result win"; r.innerHTML = `<h3>Slip hits +${money(win)}</h3><p>All ${slip.length} picks landed at ×${fmtMult(multOf(slip).mult)}.</p><p>${sum}</p>`;
+    const win = payout(stake, multOf(slip).mult); bank += win; rec.w++;
+    r.className = "result win"; r.innerHTML = `<h3>Slip hits +${trophies(win)}</h3><p>${slip.length === 1 ? "Your pick landed" : `All ${slip.length} picks landed`} at ×${fmtMult(multOf(slip).mult)}.</p><p>${sum}</p>`;
   } else {
     rec.l++;
     const lost = slip.filter(l => l.status === "lost");
-    r.className = "result lose"; r.innerHTML = `<h3>Busted −${money(stake)}</h3><p>Missed: ${lost.map(l => `${l.m.q} (${l.side.toUpperCase()})`).join(", ")}.</p><p>${sum}</p>`;
+    r.className = "result lose"; r.innerHTML = `<h3>Busted −${trophies(stake)}</h3><p>Missed: ${lost.map(l => `${l.m.q} (${l.side.toUpperCase()})`).join(", ")}.</p><p>${sum}</p>`;
   }
   const m = slip.length ? multOf(slip).mult : 0, won = slip.length > 0 && slip.every(l => l.status === "won");
-  recordDrive(key, { sig: slipSig(), mult: +m.toFixed(2), picks: slip.length, won, stake: slip.length ? stake : 0, payout: won ? +(stake * m).toFixed(2) : 0, at: Date.now() }, true);
+  recordDrive(key, { sig: slipSig(), mult: +m.toFixed(2), picks: slip.length, won, stake: slip.length ? stake : 0, payout: won ? payout(stake, m) : 0, at: Date.now() }, true);
   simulateBots(key, st);
   showBoard(key, driveNo);
   save(); drawBoard(); paintSlip();
   $("phaseTxt").innerHTML = `<b>Drive over</b> · ${resultTxt[st.result]}`;
   $("phase").classList.remove("live");
   $("snap").textContent = G.over ? "Final" : "Next";
-  if (bank < 1) { bank = 100; save(); toast("Bank reloaded with $100 play money."); paintSlip(); }
+  if (bank < 10) { bank = 1000; save(); toast("Out of trophies, so here's 🏆 1,000 to get back in."); paintSlip(); }
 }
 
 function applyDrive(res, g = G) {
@@ -1055,7 +1058,7 @@ function showFinal() {
   feed.hidden = false; $("live").hidden = true;
   feed.innerHTML = `<article class="card endcard"><div class="card-in glass"><div class="c-top"><span class="tag">Final</span></div>
     <h2 class="q">${w}, ${Math.max(a, b)}–${Math.min(a, b)}</h2>
-    <div class="big mono">${money(bank)}</div><p class="rule">Bank after the game · ${rec.w} slips hit, ${rec.l} busted.</p>
+    <div class="big mono">${trophies(bank)}</div><p class="rule">Trophies after the game · ${rec.w} slips hit, ${rec.l} busted.</p>
     <p class="rule">${gameNow() === G.gameId ? `A replay of this game is unranked: your first result on each drive is the one on the leaderboard. The next ranked game starts at ${new Date((+G.gameId.slice(1) + 1) * GAME_MS).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.` : "A new ranked game is ready."}</p>
     <button class="snap" id="newGame" style="align-self:flex-start">${gameNow() === G.gameId ? "Replay" : "Play the new game"}</button></div></article>`;
   $("newGame").addEventListener("click", newGame);
@@ -1078,22 +1081,22 @@ try { LB.friends = new Set(JSON.parse(localStorage.getItem("sportspredictionclas
 const SIM_PLAYERS = true;
 const BOTS = [
   // legs: slip size range · dog: chance of taking the cheaper (underdog) side · play: chance of betting a given drive
-  { name: "BlitzKing", color: "#d9480f", legs: [5, 8], dog: 0.8, play: 0.9, stakes: [1, 5] },
-  { name: "ChainMover", color: "#2b8a3e", legs: [2, 3], dog: 0.2, play: 0.95, stakes: [10, 25] },
-  { name: "RedZoneRita", color: "#c2255c", legs: [3, 5], dog: 0.5, play: 0.85, stakes: [5, 10] },
-  { name: "PuntGod", color: "#5f3dc4", legs: [1, 2], dog: 0.15, play: 0.7, stakes: [25] },
-  { name: "HailMaryHank", color: "#e8590c", legs: [6, 8], dog: 0.9, play: 0.75, stakes: [1] },
-  { name: "SlantRoute", color: "#1971c2", legs: [3, 4], dog: 0.4, play: 0.8, stakes: [5] },
-  { name: "TwoMinuteTess", color: "#0c8599", legs: [2, 5], dog: 0.55, play: 0.65, stakes: [5, 10, 25] },
-  { name: "CoverTwo", color: "#5c940d", legs: [2, 4], dog: 0.3, play: 0.75, stakes: [10] },
-  { name: "PocketPasser", color: "#364fc7", legs: [1, 3], dog: 0.35, play: 0.8, stakes: [5, 10] },
-  { name: "GoalLineGabe", color: "#a61e4d", legs: [4, 6], dog: 0.65, play: 0.7, stakes: [1, 5] },
-  { name: "SafetyValve", color: "#087f5b", legs: [1, 2], dog: 0.1, play: 0.85, stakes: [10, 25] },
-  { name: "Pick6Paige", color: "#862e9c", legs: [3, 6], dog: 0.7, play: 0.6, stakes: [1, 5] },
-  { name: "AudibleAndy", color: "#e67700", legs: [2, 3], dog: 0.45, play: 0.8, stakes: [5] },
-  { name: "FlexBone", color: "#2f9e44", legs: [1, 3], dog: 0.25, play: 0.75, stakes: [5, 10] },
-  { name: "NickelPackage", color: "#1864ab", legs: [2, 4], dog: 0.5, play: 0.7, stakes: [5, 10] },
-  { name: "OnsideKiki", color: "#c92a2a", legs: [7, 8], dog: 0.95, play: 0.5, stakes: [1] },
+  { name: "BlitzKing", color: "#d9480f", legs: [5, 8], dog: 0.8, play: 0.9, stakes: [10, 50] },
+  { name: "ChainMover", color: "#2b8a3e", legs: [2, 3], dog: 0.2, play: 0.95, stakes: [100, 250] },
+  { name: "RedZoneRita", color: "#c2255c", legs: [3, 5], dog: 0.5, play: 0.85, stakes: [50, 100] },
+  { name: "PuntGod", color: "#5f3dc4", legs: [1, 2], dog: 0.15, play: 0.7, stakes: [250] },
+  { name: "HailMaryHank", color: "#e8590c", legs: [6, 8], dog: 0.9, play: 0.75, stakes: [10] },
+  { name: "SlantRoute", color: "#1971c2", legs: [3, 4], dog: 0.4, play: 0.8, stakes: [50] },
+  { name: "TwoMinuteTess", color: "#0c8599", legs: [2, 5], dog: 0.55, play: 0.65, stakes: [50, 100, 250] },
+  { name: "CoverTwo", color: "#5c940d", legs: [2, 4], dog: 0.3, play: 0.75, stakes: [100] },
+  { name: "PocketPasser", color: "#364fc7", legs: [1, 3], dog: 0.35, play: 0.8, stakes: [50, 100] },
+  { name: "GoalLineGabe", color: "#a61e4d", legs: [4, 6], dog: 0.65, play: 0.7, stakes: [10, 50] },
+  { name: "SafetyValve", color: "#087f5b", legs: [1, 2], dog: 0.1, play: 0.85, stakes: [100, 250] },
+  { name: "Pick6Paige", color: "#862e9c", legs: [3, 6], dog: 0.7, play: 0.6, stakes: [10, 50] },
+  { name: "AudibleAndy", color: "#e67700", legs: [2, 3], dog: 0.45, play: 0.8, stakes: [50] },
+  { name: "FlexBone", color: "#2f9e44", legs: [1, 3], dog: 0.25, play: 0.75, stakes: [50, 100] },
+  { name: "NickelPackage", color: "#1864ab", legs: [2, 4], dog: 0.5, play: 0.7, stakes: [50, 100] },
+  { name: "OnsideKiki", color: "#c92a2a", legs: [7, 8], dog: 0.95, play: 0.5, stakes: [10] },
 ];
 
 function botSlip(bot, r) {
@@ -1125,7 +1128,7 @@ function simulateBots(key, st) {
     if (!legs.length) return;
     const won = legs.every(l => outcome(l.m, st, true) === (l.side === "yes"));
     const mult = multOf(legs).mult, stk = bot.stakes[Math.floor(r() * bot.stakes.length)];
-    rows.push({ uid: `bot:${i}`, bot, mult: +mult.toFixed(2), picks: legs.length, won, stake: stk, payout: won ? +(stk * mult).toFixed(2) : 0, at: i });
+    rows.push({ uid: `bot:${i}`, bot, mult: +mult.toFixed(2), picks: legs.length, won, stake: stk, payout: won ? payout(stk, mult) : 0, at: i });
   });
   LB.bots[key] = rows;
 }
@@ -1178,12 +1181,12 @@ const isNum = (x, lo, hi) => typeof x === "number" && Number.isFinite(x) && x >=
 function checkEntry(key, uid, e) {
   if (!e || typeof e !== "object") return null;
   if (!isNum(e.mult, 0, MAX_MULT) || !isNum(e.picks, 0, MAX_LEGS) || !Number.isInteger(e.picks) || typeof e.won !== "boolean"
-    || !isNum(e.payout, 0, 25 * MAX_MULT) || ![0, 1, 5, 10, 25].includes(e.stake) || typeof e.sig !== "string" || e.sig.length > 400) return null;
+    || !isNum(e.payout, 0, 250 * MAX_MULT) || !Number.isInteger(e.payout) || ![0, 10, 50, 100, 250].includes(e.stake) || typeof e.sig !== "string" || e.sig.length > 400) return null;
   const clean = { uid, mult: e.mult, picks: e.picks, won: e.won, stake: e.stake, payout: e.payout, pending: e.pending === true, at: isNum(e.at, 0, 1e15) ? e.at : 0 };
   const legs = e.sig ? e.sig.split(",") : [];
   if (legs.length !== e.picks || new Set(legs.map(l => l.split(":")[0])).size !== legs.length) return null;
   if (!e.won) return clean;                          // a loss or a pending slip claims nothing
-  if (Math.abs(e.payout - e.stake * e.mult) > 0.05) return null;
+  if (Math.abs(e.payout - e.stake * e.mult) > e.stake * 0.005 + 1) return null;
   const r = replayDrive(key);
   if (!r) return null;
   const chosen = [];
@@ -1263,7 +1266,7 @@ async function paintBoard() {
     nm.textContent = r.bot ? r.bot.name : isMe ? (p && p.name ? `${p.name} (you)` : "You") : (p && p.name) || "Player";
     if (r.bot) { const tg = document.createElement("small"); tg.className = "sim"; tg.textContent = "Sim"; nm.append(" ", tg); }
     const mx = document.createElement("span"); mx.className = "mx"; mx.textContent = `×${fmtMult(r.mult)}`;
-    const po = document.createElement("span"); po.className = "po"; po.textContent = `${r.picks} ${r.picks === 1 ? "pick" : "picks"} · +${money(r.payout)}`;
+    const po = document.createElement("span"); po.className = "po"; po.textContent = `${r.picks} ${r.picks === 1 ? "pick" : "picks"} · +${trophies(r.payout)}`;
     li.append(rk, av, nm, mx, po);
     list.append(li);
   }
