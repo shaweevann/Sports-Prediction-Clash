@@ -216,7 +216,7 @@ private struct BoardRowView: View {
                     Text(row.name).font(.subheadline.bold()).lineLimit(1)
                     if row.isBot { SimTag() }
                 }
-                Text("\(row.picks) \(row.picks == 1 ? "pick" : "picks") · +\(money(row.payout))")
+                Text("\(row.picks) \(row.picks == 1 ? "pick" : "picks") · +\(trophies(row.payout))")
                     .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
             }
             Spacer()
@@ -327,8 +327,8 @@ struct FinalView: View {
                 .padding(.horizontal, 10).padding(.vertical, 4)
                 .glassEffect(.regular, in: .capsule)
             Text("\(winner), \(max(a, b))–\(min(a, b))").font(.system(size: 32, weight: .bold))
-            Text(money(model.bank)).font(.system(size: 56, weight: .bold, design: .rounded)).monospacedDigit().foregroundStyle(Brand.goldInk)
-            Text("Bank after the game · \(model.wins) slips hit, \(model.losses) busted.").foregroundStyle(.secondary)
+            Text(trophies(model.bank)).font(.system(size: 56, weight: .bold, design: .rounded)).monospacedDigit().foregroundStyle(Brand.goldInk)
+            Text("Trophies after the game · \(model.wins) slips hit, \(model.losses) busted.").foregroundStyle(.secondary)
             Text(model.isReplay
                  ? "A replay of this game is unranked: your first result on each drive is the one on the leaderboard. The next ranked game starts at \(next)."
                  : "A new ranked game is ready.")

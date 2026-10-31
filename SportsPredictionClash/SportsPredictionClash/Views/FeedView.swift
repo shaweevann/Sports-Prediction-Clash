@@ -47,7 +47,7 @@ struct MarketCard: View {
                     .glassEffect(.regular, in: .capsule)
                 Text("\(index + 1) of \(count)").font(.footnote).foregroundStyle(.secondary)
                 Spacer()
-                Text(String(format: "$%.1fk vol", Double(market.vol) / 1000))
+                Text("🏆 \(String(format: "%.1fk", Double(market.vol) / 100)) in play")
                     .font(.footnote.monospacedDigit()).foregroundStyle(.secondary)
             }
             Text(market.question)
@@ -144,7 +144,7 @@ struct SideButton: View {
         Button { model.pick(market, side) } label: {
             VStack(alignment: .leading, spacing: 1) {
                 Text(side.label).font(.caption.weight(.bold)).tracking(0.5)
-                Text("\(on ? leg!.price : market.ask(side))¢")
+                Text("×\(Pricing.fmt(100 / Double(on ? leg!.price : market.ask(side))))")
                     .font(.system(size: 24, weight: .bold, design: .rounded))
                     .monospacedDigit()
                     .contentTransition(.numericText())
@@ -162,7 +162,7 @@ struct SideButton: View {
         .background(on ? color : .clear, in: .rect(cornerRadius: 22))
         .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 22))
         .opacity(dim ? 0.4 : 1)
-        .accessibilityLabel("\(side.label) at \(market.ask(side)) cents")
+        .accessibilityLabel("\(side.label) pays \(Pricing.fmt(100 / Double(market.ask(side)))) times")
     }
 }
 
@@ -220,7 +220,7 @@ struct EndCard: View {
                 .shadow(color: Brand.gold.opacity(0.5), radius: 12)
             Text(model.slip.isEmpty
                  ? "No picks yet. Scroll back up, or just watch this drive."
-                 : "\(model.slip.count) picks · \(money(Double(model.stake))) pays \(money(Double(model.stake) * m.mult))")
+                 : "\(model.slip.count) picks · \(trophies(Double(model.stake))) pays \(trophies(payout(model.stake, m.mult)))")
                 .foregroundStyle(.secondary)
             BrandButton(title: "Snap the ball") { model.snap() }
         }

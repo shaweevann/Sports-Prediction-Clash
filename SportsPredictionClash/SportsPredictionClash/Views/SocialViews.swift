@@ -164,7 +164,7 @@ struct ProgressSheet: View {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(m.title).font(.body.weight(.semibold))
                                 ProgressView(value: Double(model.progress(m)), total: Double(m.goal)).tint(Brand.gold)
-                                Text("\(model.progress(m)) of \(m.goal) · +\(money(Double(m.reward))) and 50 XP")
+                                Text("\(model.progress(m)) of \(m.goal) · +\(trophies(Double(m.reward))) and 50 XP")
                                     .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                             }
                             Spacer(minLength: 8)
@@ -186,7 +186,7 @@ struct ProgressSheet: View {
                 Section("Record") {
                     LabeledContent("Slips hit", value: "\(model.wins)")
                     LabeledContent("Slips busted", value: "\(model.losses)")
-                    LabeledContent("Bank", value: money(model.bank))
+                    LabeledContent("Trophies", value: trophies(model.bank))
                 }
             }
             .navigationTitle("Progress")
@@ -217,7 +217,7 @@ struct StandingRowView: View {
                     .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
             }
             Spacer()
-            Text((row.net >= 0 ? "+" : "−") + money(abs(row.net)))
+            Text((row.net >= 0 ? "+" : "−") + trophies(abs(row.net)))
                 .font(.headline.monospacedDigit())
                 .foregroundStyle(row.net >= 0 ? Color.green : Color.red)
         }
@@ -264,7 +264,7 @@ struct SlipShareCard: View {
                     }
                 }
             }
-            Text(won == true ? "$\(stake) stake paid \(money(Double(stake) * mult)) · play money" : "$\(stake) stake · play money")
+            Text(won == true ? "\(trophies(Double(stake))) stake won \(trophies(payout(stake, mult)))" : "\(trophies(Double(stake))) stake")
                 .font(.caption).foregroundStyle(.white.opacity(0.6))
         }
         .padding(24)

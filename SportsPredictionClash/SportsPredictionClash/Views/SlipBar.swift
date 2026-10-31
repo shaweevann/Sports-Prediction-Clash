@@ -13,13 +13,13 @@ struct SlipBar: View {
         VStack(spacing: 10) {
             HStack {
                 Picker("Stake", selection: $model.stake) {
-                    ForEach(GameModel.stakes, id: \.self) { Text("$\($0)").tag($0) }
+                    ForEach(GameModel.stakes, id: \.self) { Text("\($0)").tag($0) }
                 }
                 .pickerStyle(.segmented)
                 .frame(width: 196)
                 .disabled(model.phase != .market)
                 Spacer()
-                Text("Bank \(Text(money(model.bank)).bold().monospacedDigit()) · \(model.wins)–\(model.losses)")
+                Text("\(Text(trophies(model.bank)).bold().monospacedDigit()) · \(model.wins)–\(model.losses)")
                     .font(.caption).foregroundStyle(.secondary)
             }
             HStack(spacing: 12) {
@@ -42,7 +42,7 @@ struct SlipBar: View {
                 BrandButton(title: primaryTitle, action: primary)
                 .disabled(model.phase == .loading || (model.phase == .market && !model.slip.isEmpty && Double(model.stake) > model.bank))
             }
-            Text("Play money prototype · Prices in ¢ per $1 contract")
+            Text("Play for trophies · No real money")
                 .font(.caption2).foregroundStyle(.tertiary)
         }
         .padding(14)
@@ -53,16 +53,16 @@ struct SlipBar: View {
     }
 
     private var payLine: String {
-        let n = model.slip.count, pays = Double(model.stake) * model.math.mult
+        let n = model.slip.count, pays = payout(model.stake, model.math.mult)
         switch model.phase {
         case .market:
             if n == 0 { return "Swipe a market to start your slip" }
-            if Double(model.stake) > model.bank { return "Stake is more than your bank. Lower it." }
-            return "\(money(Double(model.stake))) pays \(money(pays)) if all \(n) hit"
+            if Double(model.stake) > model.bank { return "Not enough trophies. Lower your stake." }
+            return "\(trophies(Double(model.stake))) pays \(trophies(pays)) if all \(n) hit"
         case .live:
             if n == 0 { return "Just watching this drive" }
             if let lost = model.slip.first(where: { $0.won == false }) { return "Busted: \(lost.market.question)" }
-            return "\(model.slip.filter { $0.won == true }.count) of \(n) hit · pays \(money(pays))"
+            return "\(model.slip.filter { $0.won == true }.count) of \(n) hit · pays \(trophies(pays))"
         case .done: return model.summary?.title ?? ""
         case .final: return "Game over"
         case .loading: return "Setting the lines"
@@ -141,7 +141,7 @@ struct SlipSheet: View {
                             SideChip(side: leg.side)
                             Text(leg.market.question)
                             Spacer()
-                            Text("\(leg.price)¢").monospacedDigit().foregroundStyle(.secondary)
+                            Text("×\(Pricing.fmt(100 / Double(leg.price)))").monospacedDigit().foregroundStyle(.secondary)
                         }
                         .swipeActions {
                             if model.phase == .market {
@@ -155,7 +155,7 @@ struct SlipSheet: View {
                         LabeledContent("Market payouts multiplied", value: "×\(Pricing.fmt(m.naive))")
                         LabeledContent("Correlation adjustment", value: "×" + String(format: "%.2f", m.corr))
                         LabeledContent("Slip multiplier", value: "×\(Pricing.fmt(m.mult)) of ×\(Int(Pricing.maxMult))")
-                        LabeledContent("\(money(Double(model.stake))) pays", value: money(Double(model.stake) * m.mult))
+                        LabeledContent("\(trophies(Double(model.stake))) pays", value: trophies(payout(model.stake, m.mult)))
                         LabeledContent("Model fair odds", value: "×\(Pricing.fmt(1 / fair))")
                         LabeledContent("House edge", value: String(format: "%.1f%%", (1 - m.mult * fair) * 100))
                     } header: {

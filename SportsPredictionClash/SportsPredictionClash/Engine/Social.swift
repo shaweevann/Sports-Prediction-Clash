@@ -44,13 +44,13 @@ struct Mission: Identifiable {
 
 /// Three of these are picked each day, the same three for everyone.
 let missionPool: [Mission] = [
-    Mission(id: "play5", title: "Play 5 drives", goal: 5, reward: 10) { $0.drives },
-    Mission(id: "hit2", title: "Hit 2 slips", goal: 2, reward: 20) { $0.hits },
-    Mission(id: "big", title: "Snap a slip with 3+ picks", goal: 1, reward: 10) { $0.bigSlips },
-    Mission(id: "tail", title: "Tail a friend's slip", goal: 1, reward: 10) { $0.tails },
-    Mission(id: "share", title: "Share a slip", goal: 1, reward: 5) { $0.shares },
-    Mission(id: "follow", title: "Follow 2 players", goal: 2, reward: 5) { $0.follows },
-    Mission(id: "tenx", title: "Hit a ×10 slip", goal: 1, reward: 30) { $0.tenX },
+    Mission(id: "play5", title: "Play 5 drives", goal: 5, reward: 100) { $0.drives },
+    Mission(id: "hit2", title: "Hit 2 slips", goal: 2, reward: 200) { $0.hits },
+    Mission(id: "big", title: "Snap a slip with 3+ picks", goal: 1, reward: 100) { $0.bigSlips },
+    Mission(id: "tail", title: "Tail a friend's slip", goal: 1, reward: 100) { $0.tails },
+    Mission(id: "share", title: "Share a slip", goal: 1, reward: 50) { $0.shares },
+    Mission(id: "follow", title: "Follow 2 players", goal: 2, reward: 50) { $0.follows },
+    Mission(id: "tenx", title: "Hit a ×10 slip", goal: 1, reward: 300) { $0.tenX },
 ]
 
 // MARK: - Simulated players, tailing and boards
@@ -87,7 +87,7 @@ extension GameModel {
             guard let s = botSlips[i] else { return nil }
             let won = s.legs.allSatisfy { $0.market.outcome(st, done: true) == ($0.side == .yes) }
             let mult = Pricing.math(s.legs).mult
-            return BotResult(bot: i, mult: mult, picks: s.legs.count, won: won, stake: s.stake, payout: won ? Double(s.stake) * mult : 0)
+            return BotResult(bot: i, mult: mult, picks: s.legs.count, won: won, stake: s.stake, payout: won ? payout(s.stake, mult) : 0)
         }
     }
 
@@ -186,7 +186,7 @@ extension GameModel {
         day.claimed.append(m.id)
         bank += Double(m.reward)
         winPulse += 1
-        show("+\(money(Double(m.reward))) and 50 XP")
+        show("+\(trophies(Double(m.reward))) and 50 XP")
         gainXP(50)
         save()
     }

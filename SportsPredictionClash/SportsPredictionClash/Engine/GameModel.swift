@@ -62,22 +62,22 @@ struct Bot {
 /// against the same drive, seeded by game and drive so every player sees the same bots with the same results.
 let simPlayers = true
 let bots: [Bot] = [
-    Bot(name: "BlitzKing", color: Color(red: 0.85, green: 0.28, blue: 0.06), legs: 5...8, dog: 0.8, play: 0.9, stakes: [1, 5]),
-    Bot(name: "ChainMover", color: Color(red: 0.17, green: 0.54, blue: 0.24), legs: 2...3, dog: 0.2, play: 0.95, stakes: [10, 25]),
-    Bot(name: "RedZoneRita", color: Color(red: 0.76, green: 0.15, blue: 0.36), legs: 3...5, dog: 0.5, play: 0.85, stakes: [5, 10]),
-    Bot(name: "PuntGod", color: Color(red: 0.37, green: 0.24, blue: 0.77), legs: 1...2, dog: 0.15, play: 0.7, stakes: [25]),
-    Bot(name: "HailMaryHank", color: Color(red: 0.91, green: 0.35, blue: 0.05), legs: 6...8, dog: 0.9, play: 0.75, stakes: [1]),
-    Bot(name: "SlantRoute", color: Color(red: 0.10, green: 0.44, blue: 0.76), legs: 3...4, dog: 0.4, play: 0.8, stakes: [5]),
-    Bot(name: "TwoMinuteTess", color: Color(red: 0.05, green: 0.52, blue: 0.60), legs: 2...5, dog: 0.55, play: 0.65, stakes: [5, 10, 25]),
-    Bot(name: "CoverTwo", color: Color(red: 0.36, green: 0.58, blue: 0.05), legs: 2...4, dog: 0.3, play: 0.75, stakes: [10]),
-    Bot(name: "PocketPasser", color: Color(red: 0.21, green: 0.31, blue: 0.78), legs: 1...3, dog: 0.35, play: 0.8, stakes: [5, 10]),
-    Bot(name: "GoalLineGabe", color: Color(red: 0.65, green: 0.12, blue: 0.30), legs: 4...6, dog: 0.65, play: 0.7, stakes: [1, 5]),
-    Bot(name: "SafetyValve", color: Color(red: 0.03, green: 0.50, blue: 0.36), legs: 1...2, dog: 0.1, play: 0.85, stakes: [10, 25]),
-    Bot(name: "Pick6Paige", color: Color(red: 0.53, green: 0.18, blue: 0.61), legs: 3...6, dog: 0.7, play: 0.6, stakes: [1, 5]),
-    Bot(name: "AudibleAndy", color: Color(red: 0.90, green: 0.47, blue: 0.0), legs: 2...3, dog: 0.45, play: 0.8, stakes: [5]),
-    Bot(name: "FlexBone", color: Color(red: 0.18, green: 0.62, blue: 0.27), legs: 1...3, dog: 0.25, play: 0.75, stakes: [5, 10]),
-    Bot(name: "NickelPackage", color: Color(red: 0.09, green: 0.39, blue: 0.67), legs: 2...4, dog: 0.5, play: 0.7, stakes: [5, 10]),
-    Bot(name: "OnsideKiki", color: Color(red: 0.79, green: 0.16, blue: 0.16), legs: 7...8, dog: 0.95, play: 0.5, stakes: [1]),
+    Bot(name: "BlitzKing", color: Color(red: 0.85, green: 0.28, blue: 0.06), legs: 5...8, dog: 0.8, play: 0.9, stakes: [10, 50]),
+    Bot(name: "ChainMover", color: Color(red: 0.17, green: 0.54, blue: 0.24), legs: 2...3, dog: 0.2, play: 0.95, stakes: [100, 250]),
+    Bot(name: "RedZoneRita", color: Color(red: 0.76, green: 0.15, blue: 0.36), legs: 3...5, dog: 0.5, play: 0.85, stakes: [50, 100]),
+    Bot(name: "PuntGod", color: Color(red: 0.37, green: 0.24, blue: 0.77), legs: 1...2, dog: 0.15, play: 0.7, stakes: [250]),
+    Bot(name: "HailMaryHank", color: Color(red: 0.91, green: 0.35, blue: 0.05), legs: 6...8, dog: 0.9, play: 0.75, stakes: [10]),
+    Bot(name: "SlantRoute", color: Color(red: 0.10, green: 0.44, blue: 0.76), legs: 3...4, dog: 0.4, play: 0.8, stakes: [50]),
+    Bot(name: "TwoMinuteTess", color: Color(red: 0.05, green: 0.52, blue: 0.60), legs: 2...5, dog: 0.55, play: 0.65, stakes: [50, 100, 250]),
+    Bot(name: "CoverTwo", color: Color(red: 0.36, green: 0.58, blue: 0.05), legs: 2...4, dog: 0.3, play: 0.75, stakes: [100]),
+    Bot(name: "PocketPasser", color: Color(red: 0.21, green: 0.31, blue: 0.78), legs: 1...3, dog: 0.35, play: 0.8, stakes: [50, 100]),
+    Bot(name: "GoalLineGabe", color: Color(red: 0.65, green: 0.12, blue: 0.30), legs: 4...6, dog: 0.65, play: 0.7, stakes: [10, 50]),
+    Bot(name: "SafetyValve", color: Color(red: 0.03, green: 0.50, blue: 0.36), legs: 1...2, dog: 0.1, play: 0.85, stakes: [100, 250]),
+    Bot(name: "Pick6Paige", color: Color(red: 0.53, green: 0.18, blue: 0.61), legs: 3...6, dog: 0.7, play: 0.6, stakes: [10, 50]),
+    Bot(name: "AudibleAndy", color: Color(red: 0.90, green: 0.47, blue: 0.0), legs: 2...3, dog: 0.45, play: 0.8, stakes: [50]),
+    Bot(name: "FlexBone", color: Color(red: 0.18, green: 0.62, blue: 0.27), legs: 1...3, dog: 0.25, play: 0.75, stakes: [50, 100]),
+    Bot(name: "NickelPackage", color: Color(red: 0.09, green: 0.39, blue: 0.67), legs: 2...4, dog: 0.5, play: 0.7, stakes: [50, 100]),
+    Bot(name: "OnsideKiki", color: Color(red: 0.79, green: 0.16, blue: 0.16), legs: 7...8, dog: 0.95, play: 0.5, stakes: [10]),
 ]
 
 @MainActor
@@ -85,14 +85,14 @@ let bots: [Bot] = [
 final class GameModel {
     static let marketSeconds = 60
     static let hurrySeconds = 10
-    static let stakes = [1, 5, 10, 25]
+    static let stakes = [10, 50, 100, 250]
 
     var g = GameState()
     var phase: Phase = .loading
     var markets: [Market] = []
     var slip: [Leg] = []
-    var stake = 5
-    var bank = 100.0
+    var stake = 50
+    var bank = 1000.0
     var wins = 0
     var losses = 0
     var timeLeft = marketSeconds
@@ -163,7 +163,7 @@ final class GameModel {
 
     func caption(_ m: Market, _ side: Side) -> String {
         if let l = leg(for: m), l.side == side { return "Picked · tap to remove" }
-        if slip.isEmpty || (slip.count == 1 && leg(for: m) != nil) { return "pays \(Pricing.fmt(100 / Double(m.ask(side))))×" }
+        if slip.isEmpty || (slip.count == 1 && leg(for: m) != nil) { return "wins \(trophies(payout(stake, 100 / Double(m.ask(side)))))" }
         switch check(m, side) {
         case .failure(let b): return b.short
         case .success(let mult): return "slip → ×\(Pricing.fmt(mult))"
@@ -273,7 +273,7 @@ final class GameModel {
             slip = trial
             m.mid = clamp(m.mid + (side == .yes ? 1.2 : -1.2), 2, 98)   // your order moves the book
             m.vol += stake
-            notes[m.id] = "Added \(side.label) at \(leg.price)¢"
+            notes[m.id] = "Added \(side.label) at ×\(Pricing.fmt(100 / Double(leg.price)))"
             bump += 1
             advance(from: markets.firstIndex { $0 === m } ?? 0)
         }
@@ -299,7 +299,7 @@ final class GameModel {
 
     func snap() {
         guard phase == .market else { return }
-        if !slip.isEmpty && Double(stake) > bank { show("Lower your stake first."); return }
+        if !slip.isEmpty && Double(stake) > bank { show("Not enough trophies. Lower your stake first."); return }
         tickTask?.cancel()
         if !slip.isEmpty { bank -= Double(stake) }
         progressOnSnap()
@@ -358,21 +358,21 @@ final class GameModel {
         if slip.isEmpty {
             summary = DriveSummary(title: st.result.label, detail: "", line: line, won: nil)
         } else if won {
-            let win = Double(stake) * m
+            let win = payout(stake, m)
             bank += win; wins += 1; winPulse += 1
-            summary = DriveSummary(title: "Slip hits +\(money(win))", detail: slip.count == 1 ? "Your pick landed at ×\(Pricing.fmt(m))." : "All \(slip.count) picks landed at ×\(Pricing.fmt(m)).", line: line, won: true)
+            summary = DriveSummary(title: "Slip hits +\(trophies(win))", detail: slip.count == 1 ? "Your pick landed at ×\(Pricing.fmt(m))." : "All \(slip.count) picks landed at ×\(Pricing.fmt(m)).", line: line, won: true)
         } else {
             losses += 1
             let missed = slip.filter { $0.won == false }.map { "\($0.market.question) (\($0.side.label))" }.joined(separator: ", ")
-            summary = DriveSummary(title: "Busted −\(money(Double(stake)))", detail: "Missed: \(missed).", line: line, won: false)
+            summary = DriveSummary(title: "Busted −\(trophies(Double(stake)))", detail: "Missed: \(missed).", line: line, won: false)
         }
         record(k, DriveEntry(sig: slipSig, mult: m, picks: slip.count, won: won, stake: slip.isEmpty ? 0 : stake,
-                             payout: won ? Double(stake) * m : 0, pending: false), settle: true)
+                             payout: won ? payout(stake, m) : 0, pending: false), settle: true)
         settleBots(k, st)
         progressOnFinish(hadSlip: !slip.isEmpty, won: won, mult: m)
         boardKey = k; boardDrive = driveNo
         phase = .done
-        if bank < 1 { bank = 100; show("Bank reloaded with $100 play money.") }
+        if bank < 10 { bank = 1000; show("Out of trophies, so here's 🏆 1,000 to get back in.") }
         save()
     }
 
@@ -474,11 +474,11 @@ final class GameModel {
         let current = botResults.filter { $0.key.hasPrefix("\(g.gameId)-d") }
         let s = Saved(bank: bank, wins: wins, losses: losses, stake: stake, game: g, mine: mine, friends: Array(friends), scope: scope,
                       span: span, botResults: current, xp: xp, streak: streak, bestStreak: bestStreak, day: day)
-        if let data = try? JSONEncoder().encode(s) { UserDefaults.standard.set(data, forKey: "sportspredictionclash") }
+        if let data = try? JSONEncoder().encode(s) { UserDefaults.standard.set(data, forKey: "sportspredictionclash.trophies") }
     }
 
     private func load() {
-        guard let data = UserDefaults.standard.data(forKey: "sportspredictionclash"), let s = try? JSONDecoder().decode(Saved.self, from: data) else { return }
+        guard let data = UserDefaults.standard.data(forKey: "sportspredictionclash.trophies"), let s = try? JSONDecoder().decode(Saved.self, from: data) else { return }
         bank = s.bank; wins = s.wins; losses = s.losses; stake = s.stake
         mine = s.mine; friends = Set(s.friends); scope = s.scope
         span = s.span ?? .drive; xp = s.xp ?? 0; streak = s.streak ?? 0; bestStreak = s.bestStreak ?? 0

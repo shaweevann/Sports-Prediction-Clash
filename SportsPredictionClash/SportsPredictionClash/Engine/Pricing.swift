@@ -7,7 +7,7 @@ enum Side: String, Codable { case yes, no
 struct Leg: Identifiable {
     let market: Market
     let side: Side
-    /// Price paid, in cents per $1 contract.
+    /// Price paid, 1–99: the market's chance in percent. A leg pays 100 / price.
     let price: Int
     /// Fair probability of this side from the simulations.
     let fair: Double
@@ -49,7 +49,7 @@ struct SlipMath {
 
 enum Pricing {
     static let maxLegs = 8
-    static let maxMult = 500.0     // $25 stake tops out at $12,500
+    static let maxMult = 500.0     // a 250-trophy stake tops out at 125,000
     static let minStep = 1.05      // a pick must raise the multiplier at least this much
 
     /// Joint probability of a set of legs, read straight off the simulated drives.
@@ -93,4 +93,8 @@ enum Pricing {
     }
 }
 
-func money(_ v: Double) -> String { String(format: "$%.2f", v) }
+/// Trophies are whole numbers, shown with grouping, like "🏆 1,250".
+func trophies(_ v: Double) -> String { "🏆 " + Int(v.rounded(.down)).formatted() }
+
+/// What a winning slip pays, rounded down to whole trophies.
+func payout(_ stake: Int, _ mult: Double) -> Double { (Double(stake) * mult).rounded(.down) }
