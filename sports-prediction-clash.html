@@ -1,0 +1,1373 @@
+<title>Sports Prediction Clash</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one phone-width stage. A slow-moving stadium-light backdrop, the market feed scrolling full-bleed beneath
+   floating Liquid Glass chrome: scoreboard capsule on top, parlay slip bar at the bottom, sheets that float above. */
+:root {
+  --bg: #dfe7e2;
+  --ink: #0b1310;
+  --ink-2: rgba(11, 19, 16, .62);
+  --ink-3: rgba(11, 19, 16, .38);
+  --glass: rgba(255, 255, 255, .42);
+  --glass-hi: rgba(255, 255, 255, .62);
+  --glass-lo: rgba(255, 255, 255, .26);
+  --rim-a: rgba(255, 255, 255, .95);
+  --rim-b: rgba(255, 255, 255, .25);
+  --hair: rgba(11, 19, 16, .08);
+  --shadow: rgba(16, 40, 30, .18);
+  --orb-1: #49c6db;
+  --orb-2: #ff9b57;
+  --orb-3: #58d68d;
+  --orb-4: #7aa7ff;
+  --turf: #2e8b57;
+  --green: #1f9d48;
+  --red: #e5372d;
+  --orange: #e07800;
+  --yellow: #a87c00;
+  --blue: #0a6cff;
+  --on-tint: #ffffff;
+  --heat-l: 50%;
+  --sys: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --sys-d: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --blur: blur(22px) saturate(190%);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #040807; --ink: #f3f7f4; --ink-2: rgba(243, 247, 244, .66); --ink-3: rgba(243, 247, 244, .4);
+    --glass: rgba(38, 48, 44, .38); --glass-hi: rgba(70, 82, 77, .5); --glass-lo: rgba(28, 36, 33, .28);
+    --rim-a: rgba(255, 255, 255, .42); --rim-b: rgba(255, 255, 255, .06); --hair: rgba(255, 255, 255, .09); --shadow: rgba(0, 0, 0, .45);
+    --orb-1: #0f6f80; --orb-2: #8a3d12; --orb-3: #145c34; --orb-4: #253f86;
+    --turf: #1f6b41; --green: #30d158; --red: #ff453a; --orange: #ff9f0a; --yellow: #ffd60a; --blue: #0a84ff; --on-tint: #04110a; --heat-l: 64%;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #040807; --ink: #f3f7f4; --ink-2: rgba(243, 247, 244, .66); --ink-3: rgba(243, 247, 244, .4);
+  --glass: rgba(38, 48, 44, .38); --glass-hi: rgba(70, 82, 77, .5); --glass-lo: rgba(28, 36, 33, .28);
+  --rim-a: rgba(255, 255, 255, .42); --rim-b: rgba(255, 255, 255, .06); --hair: rgba(255, 255, 255, .09); --shadow: rgba(0, 0, 0, .45);
+  --orb-1: #0f6f80; --orb-2: #8a3d12; --orb-3: #145c34; --orb-4: #253f86;
+  --turf: #1f6b41; --green: #30d158; --red: #ff453a; --orange: #ff9f0a; --yellow: #ffd60a; --blue: #0a84ff; --on-tint: #04110a; --heat-l: 64%;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { height: 100%; box-sizing: border-box; }
+body { height: 100%; margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sys); font-size: 15px; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.mono { font-variant-numeric: tabular-nums; }
+.gut { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* The glass material: frosted fill, a light-catching rim, a soft inner sheen and a floating shadow */
+.glass { position: relative; background: var(--glass); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  box-shadow: inset 0 1px 1px var(--rim-a), inset 0 -1px 1px var(--rim-b), 0 10px 30px -8px var(--shadow); }
+.glass::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(145deg, var(--rim-a), var(--rim-b) 38%, transparent 55%, var(--rim-b) 80%, var(--rim-a));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+.glass::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(120% 60% at 20% 0%, rgba(255, 255, 255, .22), transparent 60%); mix-blend-mode: soft-light; }
+
+.app { position: relative; height: 100%; max-width: 460px; margin: 0 auto; overflow: hidden; isolation: isolate; background: var(--bg); }
+.bg { position: absolute; inset: -20%; z-index: -1; pointer-events: none; filter: blur(40px);
+  background:
+    radial-gradient(38% 30% at 18% 22%, var(--orb-1), transparent 70%),
+    radial-gradient(34% 28% at 85% 30%, var(--orb-2), transparent 70%),
+    radial-gradient(46% 34% at 30% 78%, var(--orb-3), transparent 70%),
+    radial-gradient(36% 30% at 82% 82%, var(--orb-4), transparent 70%);
+  animation: drift 26s ease-in-out infinite alternate; }
+@keyframes drift { to { transform: translate3d(4%, -3%, 0) rotate(8deg) scale(1.06); } }
+
+/* Floating chrome */
+.topbar { position: absolute; top: 0; left: 0; right: 0; z-index: 3; display: grid; gap: 8px; padding-top: 10px; padding-bottom: 0; pointer-events: none; }
+.topbar > * { pointer-events: auto; }
+.board { border-radius: 28px; padding: 12px 16px; display: grid; gap: 9px; }
+.score { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+.team { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.team.r { justify-content: flex-end; }
+.team .ab { font-family: var(--sys-d); font-weight: 700; font-size: 15px; letter-spacing: .02em; }
+.team .pts { font-family: var(--sys-d); font-weight: 700; font-size: 32px; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; min-width: 1.3ch; text-align: center; }
+.team .pos { width: 7px; height: 7px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 8px var(--orange); visibility: hidden; }
+.team.has .pos { visibility: visible; }
+.mid { text-align: center; }
+.mid .clk { font-family: var(--sys-d); font-weight: 600; font-size: 17px; font-variant-numeric: tabular-nums; }
+.mid .qt { font-size: 11px; font-weight: 500; color: var(--ink-2); }
+.field { position: relative; height: 22px; border-radius: 999px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0, 0, 0, .3);
+  background: repeating-linear-gradient(to right, transparent 0 calc(8.333% - 1px), rgba(255, 255, 255, .35) calc(8.333% - 1px) 8.333%), var(--turf); }
+.field .ez { position: absolute; top: 0; bottom: 0; width: 8.333%; display: grid; place-items: center; font-weight: 700; font-size: 8px; letter-spacing: .06em; color: rgba(0, 0, 0, .6); }
+.field .ez.l { left: 0; } .field .ez.r { right: 0; }
+.field .los, .field .fdl { position: absolute; top: 3px; bottom: 3px; width: 2px; border-radius: 2px; transition: left .5s cubic-bezier(.3, .8, .3, 1); }
+.field .los { background: #7cb6ff; }
+.field .fdl { background: #ffd60a; }
+.field .ball { position: absolute; top: 50%; width: 13px; height: 8px; margin: -4px 0 0 -6.5px; border-radius: 50%; background: #a8642e; box-shadow: 0 0 0 1.5px #fff, 0 1px 4px rgba(0, 0, 0, .4); transition: left .5s cubic-bezier(.3, .8, .3, 1); }
+.sit { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink-2); }
+.sit b { color: var(--ink); font-weight: 600; }
+
+.phase { position: relative; overflow: hidden; justify-self: center; display: flex; align-items: center; gap: 10px; padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 500; color: var(--ink-2); }
+.phase b { color: var(--ink); font-weight: 600; }
+.phase #timer { font-variant-numeric: tabular-nums; }
+.phase .bar { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--orange); transition: width 1s linear; }
+.phase.live b { color: var(--red); }
+.phase.hurry #timer { color: var(--red); }
+.phase.hurry .bar { background: var(--red); }
+
+/* Feed scrolls full-bleed under the chrome */
+.feed { position: absolute; inset: 0; overflow-y: auto; scroll-snap-type: y mandatory; overscroll-behavior: contain; scrollbar-width: none; }
+.feed::-webkit-scrollbar { display: none; }
+.card { position: relative; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; touch-action: pan-y; user-select: none;
+  padding-top: calc(var(--top-h, 170px) + 10px); padding-bottom: calc(var(--bot-h, 140px) + 10px); }
+.card-in { height: 100%; border-radius: 34px; display: flex; flex-direction: column; gap: 10px; padding: 18px 18px 14px; will-change: transform; background: var(--glass-lo); }
+.card-in.spring { transition: transform .45s cubic-bezier(.2, 1.4, .3, 1); }
+.c-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 12px; font-weight: 500; color: var(--ink-2); }
+.c-top .tag { color: var(--ink); font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--glass-hi); box-shadow: inset 0 1px 0 var(--rim-a); }
+.q { margin: 0; font-family: var(--sys-d); font-weight: 700; font-size: clamp(26px, 7.6vw, 34px); line-height: 1.08; letter-spacing: -.025em; text-wrap: balance; }
+.rule { margin: 0; color: var(--ink-2); font-size: 14px; line-height: 1.4; max-width: 40ch; }
+.quote { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.quote .chance { font-family: var(--sys-d); font-weight: 700; font-size: 40px; line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.quote .lab { font-size: 13px; color: var(--ink-2); }
+.quote .chg.up { color: var(--green); } .quote .chg.dn { color: var(--red); }
+.spark { flex: 1; min-height: 40px; width: 100%; display: block; }
+.spark .ln { fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.spark .ar { fill: var(--ink); fill-opacity: .06; stroke: none; }
+.spark .fair { stroke: var(--orange); stroke-opacity: .7; stroke-dasharray: 3 4; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.sides { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.side { position: relative; display: grid; gap: 1px; justify-items: start; padding: 11px 16px; border: 0; border-radius: 22px; text-align: left;
+  background: var(--glass-hi); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  box-shadow: inset 0 1px 1px var(--rim-a), inset 0 -1px 1px var(--rim-b), 0 4px 14px -6px var(--shadow);
+  transition: background .2s, color .2s, transform .25s cubic-bezier(.2, 1.6, .4, 1), opacity .2s; }
+.side:active { transform: scale(.95); }
+.side span { font-size: 12px; font-weight: 700; letter-spacing: .04em; }
+.side b { font-family: var(--sys-d); font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.side small { font-size: 12px; color: var(--ink-2); }
+.side.yes span, .side.yes b { color: var(--green); }
+.side.no span, .side.no b { color: var(--red); }
+.side.yes.on { background: color-mix(in srgb, var(--green) 88%, transparent); }
+.side.no.on { background: color-mix(in srgb, var(--red) 88%, transparent); }
+.side.on span, .side.on b, .side.on small { color: var(--on-tint); }
+.side.off { opacity: .4; }
+.card.locked .card-in { opacity: .55; filter: saturate(.4); }
+.foot { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--ink-3); min-height: 16px; }
+.foot .note { color: var(--orange); font-weight: 500; }
+.stamp { position: absolute; top: 42%; padding: 8px 22px; border-radius: 999px; font-family: var(--sys-d); font-weight: 800; font-size: 40px; letter-spacing: -.01em; color: var(--on-tint); opacity: 0; pointer-events: none; z-index: 2;
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); box-shadow: inset 0 1px 1px rgba(255, 255, 255, .6), 0 10px 30px -6px var(--shadow); }
+.stamp.yes { left: 28px; background: color-mix(in srgb, var(--green) 80%, transparent); transform: rotate(-8deg); }
+.stamp.no { right: 28px; background: color-mix(in srgb, var(--red) 80%, transparent); transform: rotate(8deg); }
+.endcard .card-in { justify-content: center; gap: 14px; }
+.endcard .big { font-family: var(--sys-d); font-weight: 700; font-size: 60px; letter-spacing: -.03em; color: var(--orange); line-height: 1; font-variant-numeric: tabular-nums; }
+
+/* Live view */
+.liveview { position: absolute; inset: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+  padding-top: calc(var(--top-h, 170px) + 12px); padding-bottom: calc(var(--bot-h, 140px) + 12px); }
+.sect { font-size: 13px; font-weight: 600; color: var(--ink-2); padding: 6px 4px 0; }
+.legs { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.leg { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 20px; font-size: 14px;
+  background: var(--glass); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); box-shadow: inset 0 1px 1px var(--rim-a), inset 0 -1px 1px var(--rim-b); }
+.leg .sd { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; color: var(--on-tint); }
+.leg .sd.yes { background: var(--green); }
+.leg .sd.no { background: var(--red); }
+.leg .st { font-size: 12px; font-weight: 600; color: var(--ink-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.leg.won { box-shadow: inset 0 0 0 1.5px var(--green), inset 0 1px 1px var(--rim-a); } .leg.won .st { color: var(--green); }
+.leg.lost { box-shadow: inset 0 0 0 1.5px var(--red), inset 0 1px 1px var(--rim-a); opacity: .8; } .leg.lost .st { color: var(--red); }
+.leg .x { border: 0; background: var(--glass-hi); width: 24px; height: 24px; border-radius: 50%; color: var(--ink-2); font-size: 15px; line-height: 1; padding: 0; margin-left: 4px; }
+.pbp { margin: 0; padding: 4px 16px; list-style: none; border-radius: 26px;
+  background: var(--glass); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); box-shadow: inset 0 1px 1px var(--rim-a), inset 0 -1px 1px var(--rim-b); }
+.pbp:empty { display: none; }
+.pbp li { display: grid; grid-template-columns: 3.4em 1fr; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--hair); font-size: 14px; line-height: 1.35; animation: drop .45s cubic-bezier(.2, 1.3, .4, 1); }
+.pbp li:last-child { border-bottom: 0; }
+.pbp li .t { font-size: 12px; color: var(--ink-3); padding-top: 1px; font-variant-numeric: tabular-nums; }
+.pbp li.score { color: var(--orange); font-weight: 600; }
+.pbp li.good b { color: var(--green); }
+.pbp li.bad { color: var(--red); }
+.pbp li.pen { color: var(--yellow); }
+@keyframes drop { from { opacity: 0; transform: translateY(-8px) scale(.98); } }
+.result { border-radius: 28px; padding: 18px; display: grid; gap: 4px;
+  background: var(--glass); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); box-shadow: inset 0 1px 1px var(--rim-a), inset 0 -1px 1px var(--rim-b), 0 10px 30px -8px var(--shadow); }
+.result h3 { margin: 0; font-family: var(--sys-d); font-weight: 700; font-size: 30px; letter-spacing: -.02em; line-height: 1.05; }
+.result.win { background: color-mix(in srgb, var(--green) 22%, var(--glass)); } .result.win h3 { color: var(--green); }
+.result.lose { background: color-mix(in srgb, var(--red) 16%, var(--glass)); } .result.lose h3 { color: var(--red); }
+.result p { margin: 0; color: var(--ink-2); font-size: 14px; }
+
+
+/* Drive leaderboard */
+.lb { border-radius: 28px; padding: 16px; display: grid; gap: 10px; }
+.lb header { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.lb h3 { margin: 0; font-family: var(--sys-d); font-weight: 700; font-size: 20px; letter-spacing: -.02em; }
+.lb header span { font-size: 12px; color: var(--ink-2); }
+.lb ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.lb-row { display: grid; grid-template-columns: 1.4em 26px minmax(0, 1fr) auto; grid-template-areas: "rk av nm mx" "rk av po mx"; align-items: center; column-gap: 10px; padding: 8px 12px; border-radius: 18px; background: var(--glass-lo); }
+.lb-row.me { background: var(--glass-hi); box-shadow: inset 0 0 0 1.5px var(--blue), inset 0 1px 1px var(--rim-a); }
+.lb-row .rk { grid-area: rk; font-family: var(--sys-d); font-weight: 700; font-size: 15px; color: var(--ink-2); text-align: center; font-variant-numeric: tabular-nums; }
+.lb-row.first .rk { color: var(--orange); }
+.lb-row .av { grid-area: av; width: 26px; height: 26px; border-radius: 50%; object-fit: cover; }
+.lb-row .av.bot { display: grid; place-items: center; font-size: 10px; font-weight: 700; color: #fff; letter-spacing: .02em; }
+.lb-row .sim { font-size: 10px; font-weight: 600; color: var(--ink-2); padding: 1px 6px; border-radius: 999px; background: var(--glass-hi); vertical-align: 1px; }
+.lb-row .nm { grid-area: nm; font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-row .po { grid-area: po; font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.lb-row .mx { grid-area: mx; font-family: var(--sys-d); font-weight: 700; font-size: 22px; letter-spacing: -.02em; color: var(--orange); font-variant-numeric: tabular-nums; }
+.lb-row.first .mx { color: var(--red); text-shadow: 0 0 14px color-mix(in srgb, var(--red) 55%, transparent); }
+.lb-empty { font-size: 14px; color: var(--ink-2); padding: 4px 2px; }
+.lb-tabs { display: flex; align-items: center; gap: 8px; }
+.seg { display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--glass-lo); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .12); }
+.seg button { border: 0; background: none; border-radius: 999px; padding: 5px 14px; font-size: 13px; font-weight: 600; color: var(--ink-2); transition: background .2s, color .2s; }
+.seg button[aria-selected="true"] { background: var(--glass-hi); color: var(--ink); box-shadow: inset 0 1px 1px var(--rim-a), 0 2px 6px -2px var(--shadow); }
+.lb-add { margin-left: auto; border: 0; background: none; padding: 5px 4px; font-size: 13px; font-weight: 600; color: var(--blue); }
+.fr-search { width: 100%; border: 0; border-radius: 999px; padding: 11px 16px; font: inherit; font-size: 15px; color: var(--ink); background: var(--glass); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .15), inset 0 -1px 1px var(--rim-b); outline: none; }
+.fr-search:focus-visible { box-shadow: inset 0 0 0 2px var(--blue); }
+.fr-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.fr-row { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 7px 8px 7px 10px; border-radius: 18px; background: var(--glass-lo); }
+.fr-row .av { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+.fr-row .av.bot { display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; }
+.fr-row .nm { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.follow { border: 0; border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 600; color: #fff; background: var(--blue); box-shadow: inset 0 1px 1px rgba(255, 255, 255, .45); }
+.follow.on { color: var(--ink); background: var(--glass-hi); box-shadow: inset 0 1px 1px var(--rim-a); }
+.fr-note { font-size: 13px; color: var(--ink-2); padding: 4px 4px; }
+.lb p { margin: 0; font-size: 12px; color: var(--ink-2); line-height: 1.45; }
+/* Slip bar */
+.slipwrap { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; padding-bottom: 10px; }
+.slip { border-radius: 30px; padding: 12px 14px 10px; display: grid; gap: 10px; }
+.slip-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--ink-2); }
+.stakes { display: flex; align-items: center; gap: 4px; padding: 3px; border-radius: 999px; background: var(--glass-lo); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .12); }
+.stakes button { border: 0; background: none; border-radius: 999px; padding: 4px 9px; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink-2); transition: background .2s, color .2s; }
+.stakes button.on { background: var(--glass-hi); color: var(--ink); box-shadow: inset 0 1px 1px var(--rim-a), 0 2px 6px -2px var(--shadow); }
+.stakes button:disabled { opacity: .5; cursor: default; }
+.bank b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.slip-main { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; }
+.legsbtn { border: 0; border-radius: 20px; padding: 7px 12px; display: grid; justify-items: center; line-height: 1.05; background: var(--glass-hi); box-shadow: inset 0 1px 1px var(--rim-a), inset 0 -1px 1px var(--rim-b); }
+.legsbtn b { font-family: var(--sys-d); font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; }
+.legsbtn small { font-size: 10px; font-weight: 500; color: var(--ink-2); }
+.multi { min-width: 0; }
+/* Heat: the multiplier runs cool blue -> violet -> magenta -> red as it climbs toward the cap, then shakes */
+@property --heat { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --heat-h { syntax: "<number>"; inherits: true; initial-value: 215; }
+.slip { --heat: 0; --heat-h: 215; --amp: 0px; transition: --heat .7s ease, --heat-h .7s ease;
+  background: color-mix(in srgb, hsl(var(--heat-h) 100% 50%) calc(var(--heat) * var(--heat) * 30%), var(--glass));
+  box-shadow: inset 0 1px 1px var(--rim-a), inset 0 -1px 1px var(--rim-b), 0 10px 30px -8px var(--shadow),
+    0 0 calc(var(--heat) * var(--heat) * 44px) hsl(var(--heat-h) 100% 55% / calc(var(--heat) * var(--heat) * .6)); }
+.multi .heat { display: inline-block; }
+.multi .heat.shake { animation: shake calc(.5s - var(--heat) * .3s) linear infinite; }
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  20% { transform: translate(calc(var(--amp) * -1), calc(var(--amp) * .6)) rotate(-1.5deg); }
+  40% { transform: translate(var(--amp), calc(var(--amp) * -.4)) rotate(1.2deg); }
+  60% { transform: translate(calc(var(--amp) * -.6), calc(var(--amp) * -.7)) rotate(-.8deg); }
+  80% { transform: translate(calc(var(--amp) * .8), calc(var(--amp) * .5)) rotate(1.5deg); }
+}
+.multi .x { font-family: var(--sys-d); font-weight: 700; font-size: calc(26px + var(--heat) * 8px); letter-spacing: -.02em; line-height: 1; display: inline-block; font-variant-numeric: tabular-nums;
+  color: hsl(var(--heat-h) calc(70% + var(--heat) * 30%) var(--heat-l));
+  text-shadow: 0 0 calc(2px + var(--heat) * 20px) hsl(var(--heat-h) 100% 55% / calc(var(--heat) * .9)); }
+.slip.busted .x { color: var(--ink-3); text-shadow: none; }
+.multi .x.bump { animation: bump .5s cubic-bezier(.2, 1.6, .4, 1); }
+@keyframes bump { 40% { transform: scale(1.2); } }
+.multi small { display: block; font-size: 12px; color: var(--ink-2); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.snap { position: relative; border: 0; border-radius: 999px; padding: 13px 22px; font-family: var(--sys-d); font-weight: 700; font-size: 17px; color: #fff;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--blue) 80%, #fff), var(--blue));
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, .55), inset 0 -2px 4px rgba(0, 0, 0, .18), 0 8px 20px -6px color-mix(in srgb, var(--blue) 70%, transparent);
+  transition: transform .25s cubic-bezier(.2, 1.6, .4, 1); }
+.snap:active { transform: scale(.94); }
+.snap:disabled { opacity: .45; cursor: default; }
+.fine { font-size: 11px; color: var(--ink-3); text-align: center; }
+
+/* Sheet floats above the slip, inset from the edges */
+.sheet { position: absolute; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom, 0px)); max-height: 72%; overflow-y: auto; z-index: 5;
+  border-radius: 34px; padding-block: 18px; display: grid; gap: 10px;
+  background: color-mix(in srgb, var(--bg) 80%, transparent); -webkit-backdrop-filter: blur(40px) saturate(180%); backdrop-filter: blur(40px) saturate(180%);
+  box-shadow: inset 0 1px 1px var(--rim-a), inset 0 -1px 1px var(--rim-b), 0 20px 50px -10px var(--shadow), 0 0 0 100vmax rgba(0, 0, 0, .4);
+  animation: rise .5s cubic-bezier(.2, 1.2, .3, 1); }
+@keyframes rise { from { transform: translateY(30px); opacity: 0; } }
+.sheet header { display: flex; justify-content: space-between; align-items: center; }
+.sheet h3 { margin: 0; font-family: var(--sys-d); font-weight: 700; font-size: 22px; letter-spacing: -.02em; }
+.sheet .close { border: 0; border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: 13px; background: var(--glass); box-shadow: inset 0 1px 1px var(--rim-a); }
+.sheet .math { font-size: 13px; color: var(--ink-2); line-height: 1.55; }
+.sheet .math b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.toast { position: absolute; left: 50%; top: 42%; transform: translateX(-50%); padding: 10px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; z-index: 6; pointer-events: none;
+  max-width: 88%; text-align: center; background: var(--glass-hi); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  box-shadow: inset 0 1px 1px var(--rim-a), 0 12px 30px -8px var(--shadow); animation: rise .4s cubic-bezier(.2, 1.4, .3, 1); }
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass, .side, .leg, .pbp, .result, .toast { background: var(--glass-hi); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+</style>
+
+<div class="app" id="app">
+  <div class="bg" aria-hidden="true"></div>
+  <div class="topbar gut" id="topbar">
+  <header class="board glass">
+    <div class="score">
+      <div class="team" id="t0"><span class="pos"></span><span class="ab"></span><span class="pts"></span></div>
+      <div class="mid"><div class="clk" id="clk">15:00</div><div class="qt" id="qt">1st qtr</div></div>
+      <div class="team r" id="t1"><span class="pts"></span><span class="ab"></span><span class="pos"></span></div>
+    </div>
+    <div class="field" id="field" aria-hidden="true">
+      <div class="ez l"></div><div class="ez r"></div>
+      <div class="los"></div><div class="fdl"></div><div class="ball"></div>
+    </div>
+    <div class="sit"><span id="sit"></span><span id="drv"></span></div>
+  </header>
+
+  <div class="phase glass" id="phase"><span id="phaseTxt"></span><b class="mono" id="timer"></b><i class="bar" id="bar"></i></div>
+  </div>
+
+  <main class="feed" id="feed" aria-label="Drive markets"></main>
+  <section class="liveview gut" id="live" hidden>
+    <div class="result" id="result" hidden></div>
+    <section class="lb glass" id="lb" hidden aria-live="polite">
+      <header><h3 id="lbTitle">Drive leaderboard</h3><span id="lbGame"></span></header>
+      <div class="lb-tabs">
+        <div class="seg" role="tablist" aria-label="Leaderboard scope">
+          <button id="lbGlobal" role="tab" aria-selected="true">Global</button>
+          <button id="lbFriends" role="tab" aria-selected="false">Friends</button>
+        </div>
+        <button class="lb-add" id="lbAdd">Add friends</button>
+      </div>
+      <ol id="lbList"></ol>
+      <p id="lbFoot"></p>
+    </section>
+    <div class="sect">Your slip</div>
+    <ul class="legs" id="liveLegs"></ul>
+    <div class="sect">Play by play</div>
+    <ol class="pbp" id="pbp"></ol>
+  </section>
+
+  <div class="slipwrap gut" id="slipbar">
+  <footer class="slip glass">
+    <div class="slip-row">
+      <div class="stakes" id="stakes" role="group" aria-label="Stake">
+        <button data-s="1">$1</button><button data-s="5">$5</button><button data-s="10">$10</button><button data-s="25">$25</button>
+      </div>
+      <div class="bank">Bank <b id="bank">$100.00</b> · <span id="rec">0–0</span></div>
+    </div>
+    <div class="slip-main">
+      <button class="legsbtn" id="legsBtn" aria-label="Show slip"><b id="legN">0</b><small>picks</small></button>
+      <div class="multi"><span class="heat" id="heat"><span class="x" id="mult">×—</span></span><small id="pays">Swipe a market to start your slip</small></div>
+      <button class="snap" id="snap">Snap</button>
+    </div>
+    <div class="fine">Play money prototype · Prices in ¢ per $1 contract</div>
+  </footer>
+  </div>
+
+  <div class="sheet glass gut" id="friendSheet" hidden>
+    <header><h3>Friends</h3><button class="close" id="friendClose">Done</button></header>
+    <input class="fr-search" id="friendSearch" type="search" placeholder="Search people in your organization" autocomplete="off" aria-label="Search people">
+    <div class="sect">Following</div>
+    <ul class="fr-list" id="friendMine"></ul>
+    <div class="sect" id="friendResultsHead">People</div>
+    <ul class="fr-list" id="friendResults"></ul>
+    <div class="sect">Simulated players</div>
+    <ul class="fr-list" id="friendBots"></ul>
+  </div>
+  <div class="sheet glass gut" id="sheet" hidden>
+    <header><h3>Drive slip</h3><button class="close" id="sheetClose">Close</button></header>
+    <ul class="legs" id="sheetLegs"></ul>
+    <div class="math" id="sheetMath"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+/* Seedable RNG: every player in the same game window gets the same feeds and the same drive outcomes */
+let rng = Math.random;
+const R = () => rng();
+function makeRng(key) {
+  let h = 1779033703 ^ key.length;
+  for (let i = 0; i < key.length; i++) { h = Math.imul(h ^ key.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+  let a = h >>> 0;
+  return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function reseed(key) { rng = makeRng(key); }
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const randn = () => { let u = 0, v = 0; while (!u) u = R(); while (!v) v = R(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+const fmtClock = s => `${Math.floor(s / 60)}:${String(Math.max(0, Math.round(s % 60))).padStart(2, "0")}`;
+const money = v => `$${v.toFixed(2)}`;
+const $ = id => document.getElementById(id);
+
+const T = [
+  { abbr: "BAY", name: "Gulls", color: "#1fa2b8" },
+  { abbr: "IRN", name: "Pines", color: "#e8742f" },
+];
+const N = 6000;           // Monte Carlo drives per market set
+const MARKET_SECS = 60;   // market window before the snap (~3s per card)
+const HURRY_SECS = 10;    // timer turns red
+const FEED_SIZE = 20;     // markets shown per drive
+const BAND = [0.05, 0.95];// fair probability range a market must sit in to be listed
+const MAX_LONGSHOTS = 4;  // markets priced under 15% or over 85% allowed in one feed
+const MAX_LEGS = 8;
+const MAX_MULT = 500;     // $25 stake tops out at $12,500
+const MIN_STEP = 1.05;    // a pick must raise the multiplier at least this much
+const PHI_MAX = 0.5;      // max correlation between two markets in the same feed
+const MIN_COND = 0.04;    // every YES/NO pairing of two feed markets must stay at least this possible
+
+/* Engine tuning. Targets (NFL averages): ~22 pts/team/game, TD on ~22% of drives,
+   punt ~38%, turnover ~11%, ~5.3 yards per play. */
+const TUNE = {
+  penalty: 0.07, sack: 0.065, int: 0.019, scramble: 0.05,
+  comp: 0.69, compLong: 0.6, passMu: 2.1, passSig: 0.75,
+  runMean: 4.3, runSd: 3.4, runBreak: 0.09, fumble: 0.016,
+  goShort: 0.65, goMid: 0.4,
+};
+
+/* ---------------- Drive engine ----------------
+   yl = yards from the offense's own goal line (0..100). */
+function simDrive(s0, rec) {
+  let yl = s0.yl, down = 1, dist = Math.min(10, 100 - yl), clock = s0.clock, qtr = s0.qtr;
+  const st = { plays: 0, passes: 0, runs: 0, yards: 0, firstDowns: 0, sacks: 0, pens: 0, maxGain: 0, longPass: 0, longRun: 0, thirdConv: 0, offPens: 0, defPens: 0, tfl: 0, secondType: "", secondYards: 0, thirdType: "", thirdLong: 0, b2bInc: 0, runStreak: 0, passStreak: 0,
+    fourthGo: 0, redZone: yl >= 80 ? 1 : 0, scrambles: 0, firstType: "", firstYards: 0, time: 0, maxYl: yl, result: "", punt: 0 };
+  const log = [];
+  let lastInc = false, runRun = 0, passRun = 0;
+  const push = (text, tag) => { if (rec) log.push({ text, tag, yl, down, dist, clock, qtr, st: { ...st } }); };
+  const firstDown = conv => { st.firstDowns++; if (conv) st.thirdConv++; down = 1; dist = Math.min(10, 100 - yl); };
+
+  for (let guard = 0; guard < 80; guard++) {
+    if (clock <= 0) {
+      if (qtr === 2 || qtr >= 4) { st.result = "HALF"; push(qtr >= 4 ? "Clock hits zero. That's the game." : "Clock hits zero. End of the half.", "bad"); break; }
+      qtr++; clock = 900; push(`End of the ${qtr === 2 ? "1st" : "3rd"} quarter.`, "");
+    }
+    const late = (qtr === 2 || qtr === 4) && clock <= 120;
+
+    // Penalties (pre-snap and holding)
+    if (R() < TUNE.penalty) {
+      st.pens++;
+      const r = R();
+      if (r < 0.4) { st.offPens++; const y = Math.min(5, Math.floor(yl / 2)); yl -= y; dist += y; push(`False start. Back ${y} yards.`, "pen"); continue; }
+      if (r < 0.7) { st.offPens++; const y = Math.min(10, Math.floor(yl / 2)); yl -= y; dist += y; clock -= 6; st.time += 6; push(`Holding on the offense. ${y} yards, replay the down.`, "pen"); continue; }
+      st.defPens++; const y = Math.min(5, Math.floor((100 - yl) / 2)); const conv = down === 3; yl += y; st.maxYl = Math.max(st.maxYl, yl); if (yl >= 80) st.redZone = 1;
+      clock -= 6; st.time += 6; firstDown(conv); push(y ? `Defensive holding. ${y} yards and an automatic first down.` : "Defensive holding, half the distance to the goal. Automatic first down.", "pen"); continue;
+    }
+
+    let pre = "";
+    if (down === 4) {
+      const fgd = 100 - yl + 17;
+      const go = (dist <= 1 && yl >= 35 && R() < TUNE.goShort) || (dist <= 3 && yl >= 55 && yl < 72 && R() < TUNE.goMid) || (late && qtr === 4 && s0.trailing);
+      if (!go) {
+        clock -= 6; st.time += 6;
+        if (fgd <= 57) {
+          const p = clamp(0.99 - Math.max(0, fgd - 28) * 0.012, 0.4, 0.99);
+          st.result = R() < p ? "FG" : "MISS";
+          push(`${fgd}-yard field goal attempt is ${st.result === "FG" ? "GOOD" : "NO GOOD"}.`, st.result === "FG" ? "score" : "bad");
+        } else {
+          st.punt = Math.round(clamp(42 + randn() * 7, 25, 65)); st.result = "PUNT";
+          push(`Punt, ${st.punt} yards net.`, "");
+        }
+        break;
+      }
+      st.fourthGo = 1; pre = `Going for it on 4th & ${dist}. `;
+    }
+
+    const third = down === 3, fourth = down === 4;
+    if (third && dist >= 7) st.thirdLong = 1;
+    let passP = down === 1 ? 0.5 : down === 2 ? (dist >= 7 ? 0.62 : 0.48) : (dist >= 4 ? 0.85 : 0.55);
+    if (fourth) passP = dist >= 3 ? 0.8 : 0.4;
+    if (late) passP = Math.max(passP, 0.78);
+    if (yl >= 97) passP *= 0.7;
+    const isPass = R() < passP;
+    let y = 0, txt = "", kind = "", t = 0, turnover = "";
+    if (isPass) {
+      const r = R();
+      if (r < TUNE.sack) { y = -(5 + Math.floor(R() * 6)); kind = "sack"; st.sacks++; t = late ? 8 : 35; }
+      else if (r < TUNE.sack + TUNE.int) { kind = "int"; turnover = "INT"; t = 6; txt = "Pass INTERCEPTED."; }
+      else if (r < TUNE.sack + TUNE.int + TUNE.scramble) { y = 2 + Math.floor(R() * R() * 25); kind = "scr"; st.scrambles++; t = late ? 8 : 32; }
+      else {
+        const cp = third && dist >= 7 ? TUNE.compLong : TUNE.comp;
+        if (R() < cp) { y = Math.max(1, Math.round(Math.exp(TUNE.passMu + TUNE.passSig * randn()))); kind = "comp"; t = late ? 9 : 34; }
+        else { kind = "inc"; t = 6; txt = "Pass falls incomplete."; }
+      }
+    } else {
+      if (R() < TUNE.fumble) { kind = "fum"; turnover = "FUM"; t = 6; txt = "FUMBLE. Defense recovers."; y = Math.max(0, Math.round(2 + randn() * 2)); }
+      else { y = Math.round(TUNE.runMean + randn() * TUNE.runSd); if (R() < TUNE.runBreak) y = 8 + Math.round(R() * R() * 55); y = Math.max(y, -4); kind = "run"; t = late ? 9 : 36; }
+    }
+    y = Math.min(y, 100 - yl);
+    if (yl + y < 0) y = -yl;
+    if (kind === "run" && y <= 0) st.tfl++;
+    if (kind === "inc" && lastInc) st.b2bInc = 1;
+    lastInc = kind === "inc";
+    if (kind === "sack") txt = `SACKED for a loss of ${-y}.`;
+    if (kind === "scr") txt = `QB scrambles for ${y}.`;
+    if (kind === "comp") txt = `Pass complete for ${y}.`;
+    if (kind === "run") txt = y > 0 ? `Run for ${y}.` : y === 0 ? "Run, no gain." : `Run stuffed for a loss of ${-y}.`;
+    txt = pre + txt;
+
+    st.plays++; if (isPass) st.passes++; else st.runs++;
+    if (st.plays === 2) { st.secondType = isPass ? "pass" : "run"; st.secondYards = y; }
+    if (st.plays === 3) st.thirdType = isPass ? "pass" : "run";
+    runRun = isPass ? 0 : runRun + 1; passRun = isPass ? passRun + 1 : 0;
+    st.runStreak = Math.max(st.runStreak, runRun); st.passStreak = Math.max(st.passStreak, passRun);
+    if (st.plays === 1) { st.firstType = isPass ? "pass" : "run"; st.firstYards = y; }
+    clock -= t; st.time += t; if (clock < 0) { st.time += clock; clock = 0; }
+
+    if (turnover) { yl += y; st.result = turnover; push(txt, "bad"); break; }
+    yl += y; st.yards += y;
+    if (y > st.maxGain) st.maxGain = y;
+    if (kind === "comp" && y > st.longPass) st.longPass = y;
+    if (kind === "run" && y > st.longRun) st.longRun = y;
+    if (yl > st.maxYl) st.maxYl = yl;
+    if (yl >= 80) st.redZone = 1;
+    if (yl >= 100) { st.result = "TD"; push(`${txt.slice(0, -1)}. TOUCHDOWN!`, "score"); break; }
+    if (yl <= 0) { st.result = "SAFETY"; push(`${txt} Down in the end zone. SAFETY.`, "bad"); break; }
+    if (y >= dist) { firstDown(third); push(`${txt} <b>First down.</b>`, "good"); }
+    else {
+      down++; dist -= y;
+      if (down > 4) { st.result = "DOWNS"; push(`${txt} Turnover on downs.`, "bad"); break; }
+      push(txt, kind === "sack" ? "bad" : "");
+    }
+  }
+  return rec ? { st, log, yl, qtr, clock } : st;
+}
+
+/* ---------------- Markets ---------------- */
+function marketDefs(o, d) {
+  const reachTxt = L => L === 51 ? `${o} cross midfield` : L === 80 ? `${o} reach the red zone` : `${o} reach the ${d} ${100 - L}`;
+  return [
+    { id: "td", tag: "Result", kind: "end", f: s => s.result === "TD", q: `${o} score a touchdown`, rule: "YES if this drive ends in an offensive touchdown." },
+    { id: "pts", tag: "Result", kind: "end", f: s => s.result === "TD" || s.result === "FG", q: `${o} put points on the board`, rule: "YES on a touchdown or a made field goal." },
+    { id: "fg", tag: "Result", kind: "end", f: s => s.result === "FG", q: "Drive ends in a made field goal", rule: "YES only if the kick is good. A miss settles NO." },
+    { id: "punt", tag: "Result", kind: "end", f: s => s.result === "PUNT", q: "Drive ends in a punt", rule: "YES if the offense punts it away." },
+    { id: "to", tag: "Defense", kind: "end", f: s => s.result === "INT" || s.result === "FUM", q: "Defense forces a turnover", rule: "Interception or lost fumble. Turnover on downs does not count." },
+    { id: "tao", tag: "Defense", kind: "tao", f: s => s.result === "PUNT" && s.firstDowns === 0, q: "Three-and-out", rule: "YES if the drive ends in a punt without a single first down." },
+    { id: "p1", tag: "First snap", kind: "first", f: s => s.firstType === "pass", q: "First snap is a pass", rule: "Dropbacks count, including sacks and scrambles." },
+    { id: "p1y", tag: "First snap", kind: "first", f: s => s.firstYards >= 5, q: "First snap gains 5+ yards", rule: "Settles the moment the first play is whistled dead." },
+    { id: "yds", tag: "Yardage", stat: "yards", mono: false, cands: [10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70], q: L => `Drive gains ${L}+ yards`, rule: "Net yards from scrimmage, sacks included, penalty yards excluded." },
+    { id: "fd", tag: "Chains", stat: "firstDowns", cands: [1, 2, 3, 4, 5], q: L => `${L}+ first down${L > 1 ? "s" : ""}`, rule: "First downs by penalty count." },
+    { id: "pl", tag: "Tempo", stat: "plays", cands: [3, 4, 5, 6, 7, 8, 9, 10], q: L => `Drive runs ${L}+ plays`, rule: "Snaps only. Pre-snap penalties and kicks don't count." },
+    { id: "tm", tag: "Tempo", stat: "time", cands: [60, 90, 120, 150, 180, 210, 240, 300], q: L => `Drive burns ${fmtClock(L)}+ of clock`, rule: "Game clock elapsed from first snap to the end of the drive." },
+    { id: "big", tag: "Explosive", stat: "maxGain", L: 20, q: "A single play gains 20+ yards", rule: "Any run, catch or scramble." },
+    { id: "lp", tag: "Explosive", stat: "longPass", cands: [10, 15, 20, 25, 30], q: L => `A completion of ${L}+ yards`, rule: "Scrambles don't count. Has to be a caught pass." },
+    { id: "sk", tag: "Defense", stat: "sacks", L: 1, q: "Defense records a sack", rule: "Any sack on the drive." },
+    { id: "pen", tag: "Flags", stat: "pens", L: 1, q: "A flag gets thrown", rule: "Any accepted penalty on either side." },
+    { id: "opn", tag: "Flags", stat: "offPens", L: 1, q: "Flag on the offense", rule: "False start or offensive holding." },
+    { id: "dpn", tag: "Flags", stat: "defPens", L: 1, q: "Flag on the defense", rule: "Any accepted penalty on the defense." },
+    { id: "tfl", tag: "Defense", stat: "tfl", L: 1, q: "A run gets stuffed at the line", rule: "Any designed run for no gain or a loss." },
+    { id: "p2", tag: "Snap 2", kind: "second", f: s => s.secondType === "pass", q: "Second snap is a pass", rule: "Dropbacks count. If the drive ends before a second snap, settles NO." },
+    { id: "p2y", tag: "Snap 2", kind: "second", f: s => s.plays >= 2 && s.secondYards >= 5, q: "Second snap gains 5+ yards", rule: "If the drive ends before a second snap, settles NO." },
+    { id: "p3", tag: "Snap 3", kind: "third", f: s => s.thirdType === "pass", q: "Third snap is a pass", rule: "Dropbacks count. If the drive ends before a third snap, settles NO." },
+    { id: "rr3", tag: "Play calling", stat: "runStreak", L: 3, q: "Three straight runs", rule: "Three designed runs in a row, penalties aside." },
+    { id: "pp3", tag: "Play calling", stat: "passStreak", L: 3, q: "Three straight dropbacks", rule: "Three pass plays in a row, sacks and scrambles included." },
+    { id: "air", tag: "Explosive", kind: "end", f: s => s.longPass > s.longRun, q: "Biggest gain comes through the air", rule: "Longest completion beats the longest designed run. Ties settle NO." },
+    { id: "3l", tag: "Chains", stat: "thirdLong", L: 1, q: "They face 3rd & 7 or longer", rule: "Any third-down snap needing 7+ yards." },
+    { id: "bbi", tag: "QB", stat: "b2bInc", L: 1, q: "Back-to-back incompletions", rule: "Two incomplete passes in a row. Penalties in between don't reset it." },
+    { id: "reach", tag: "Field", stat: "maxYl", cands: [51, 60, 70, 80, 90, 95], q: reachTxt, rule: "YES the moment the ball is spotted at or past that yard line." },
+    { id: "rzs", tag: "Field", kind: "end", f: s => s.redZone === 1 && s.result !== "TD", q: "Red zone trip, no touchdown", rule: "YES if they get inside the 20 and come away without a TD: a field goal, a stop or a turnover." },
+    { id: "lr", tag: "Ground game", stat: "longRun", cands: [6, 8, 10, 12, 15], q: L => `A run of ${L}+ yards`, rule: "Designed runs only. QB scrambles don't count." },
+    { id: "ph", tag: "Play calling", kind: "end", f: s => s.passes > s.runs, q: "More passes than runs", rule: "Counts snaps. Sacks and scrambles are passes. A tie settles NO." },
+    { id: "3c", tag: "Chains", stat: "thirdConv", L: 1, q: "They convert a third down", rule: "Moving the chains on 3rd down, by play or by penalty." },
+    { id: "4g", tag: "Coaching", stat: "fourthGo", L: 1, q: "They go for it on fourth down", rule: "Any 4th-down snap that isn't a punt or field goal try." },
+    { id: "scr", tag: "QB", stat: "scrambles", L: 1, q: "QB takes off and scrambles", rule: "A called pass where the QB runs it." },
+  ];
+}
+
+function outcome(m, s, done) {
+  switch (m.kind) {
+    case "over": return s[m.stat] >= m.L ? true : done ? false : null;
+    case "first": return s.plays >= 1 || done ? m.f(s) : null;
+    case "second": return s.plays >= 2 || done ? m.f(s) : null;
+    case "third": return s.plays >= 3 || done ? m.f(s) : null;
+    case "tao": return s.firstDowns > 0 ? false : done ? m.f(s) : null;
+    default: return done ? m.f(s) : null;
+  }
+}
+
+let SAMPLES = [];
+function buildMarkets(g = G) {
+  reseed(`${g.gameId}:${g.drive}:markets`);
+  const s0 = { yl: g.yl, qtr: g.qtr, clock: g.clock, trailing: g.score[g.off] < g.score[1 - g.off] };
+  SAMPLES = Array.from({ length: N }, () => simDrive(s0, false));
+  const out = [];
+  for (const d of marketDefs(T[g.off].abbr, T[1 - g.off].abbr)) {
+    let L = d.L, f = d.f;
+    if (d.stat) {
+      if (d.cands) {
+        let best = d.cands[0], bd = 9;
+        for (const c of d.cands) { let k = 0; for (const s of SAMPLES) if (s[d.stat] >= c) k++; const dd = Math.abs(k / N - 0.5); if (dd < bd) { bd = dd; best = c; } }
+        L = best;
+      }
+      f = s => s[d.stat] >= L;
+    }
+    const bits = new Uint8Array(N); let c = 0;
+    for (let i = 0; i < N; i++) if (f(SAMPLES[i])) { bits[i] = 1; c++; }
+    const p = c / N;
+    if (p < BAND[0] || p > BAND[1]) continue;
+    const mid = clamp(p * 100 + randn() * 2.5, 3, 97);
+    out.push({ ...d, L, f, bits, p, q: typeof d.q === "function" ? d.q(L) : d.q,
+      kind: d.stat ? (d.mono === false ? "end" : "over") : d.kind,
+      mid, open: mid, hist: [mid], vol: Math.round(900 + R() * R() * 32000) });
+  }
+  return orderFeed(selectFeed(out));
+}
+
+/* How two markets relate across the simulated drives: correlation, and how close any YES/NO combo is to impossible */
+function relation(a, b) {
+  let n11 = 0, n1 = 0, n2 = 0;
+  for (let i = 0; i < N; i++) { const x = a.bits[i], y = b.bits[i]; n1 += x; n2 += y; n11 += x & y; }
+  const p1 = n1 / N, p2 = n2 / N, p11 = n11 / N, d = Math.sqrt(p1 * (1 - p1) * p2 * (1 - p2));
+  // For each combo, the chance of the second given the first (both directions); near 0 means a pick conflicts or is already covered
+  const cond = [[p11, p1, p2], [p1 - p11, p1, 1 - p2], [p2 - p11, 1 - p1, p2], [1 - p1 - p2 + p11, 1 - p1, 1 - p2]]
+    .map(([c, ma, mb]) => Math.min(c / ma, c / mb));
+  return { phi: d ? Math.abs(p11 - p1 * p2) / d : 1, cond: Math.min(...cond) };
+}
+/* Build a feed of markets that mostly stand on their own, so swipes rarely get blocked:
+   one "how does the drive end" market, then greedily add the closest-to-even market that
+   isn't strongly tied to anything already in the feed. */
+function selectFeed(all) {
+  const longshot = m => m.p < 0.15 || m.p > 0.85;
+  const rel = all.map(a => all.map(b => (a === b ? null : relation(a, b))));
+  const idx = new Map(all.map((m, i) => [m, i]));
+  const td = all.find(m => m.id === "td"), results = all.filter(m => m.tag === "Result");
+  const lead = td && R() < 0.65 ? td : results[Math.floor(R() * results.length)] || all[0];
+  const picked = [lead];
+  let shots = longshot(lead) ? 1 : 0, pool = all.filter(m => m !== lead);
+  while (picked.length < FEED_SIZE && pool.length) {
+    let best = null, bestScore = Infinity;
+    for (const m of pool) {
+      if (longshot(m) && shots >= MAX_LONGSHOTS) continue;
+      let worst = 0, ok = true;
+      for (const s of picked) {
+        const r = rel[idx.get(m)][idx.get(s)];
+        if (r.phi > PHI_MAX || r.cond < MIN_COND) { ok = false; break; }
+        worst = Math.max(worst, r.phi);
+      }
+      if (!ok) continue;
+      const score = Math.abs(m.p - 0.5) + 0.8 * worst;
+      if (score < bestScore) { bestScore = score; best = m; }
+    }
+    if (!best) break;
+    picked.push(best); pool = pool.filter(m => m !== best);
+    if (longshot(best)) shots++;
+  }
+  return picked;
+}
+/* Lead market first, then shuffle so the same category never shows twice in a row */
+function orderFeed(list) {
+  const head = list[0];
+  const pool = list.filter(m => m !== head);
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  const out = [head];
+  while (pool.length) {
+    const prev = out[out.length - 1].tag;
+    const k = pool.findIndex(m => m.tag !== prev);
+    out.push(pool.splice(k < 0 ? 0 : k, 1)[0]);
+  }
+  return out;
+}
+
+// Asks never dip below the model's fair price plus the spread: the market still drifts, but a player
+// watching the fair line can't pick up free edge when the price wanders under it.
+const yesAsk = m => Math.min(99, Math.ceil(Math.max(m.mid + 1, m.p * 100 + 0.5)));
+const noAsk = m => Math.min(99, Math.ceil(Math.max(100 - m.mid + 1, (1 - m.p) * 100 + 0.5)));
+
+/* Joint probability of a set of legs, read straight off the simulated drives */
+function joint(legs) {
+  if (!legs.length) return { p: 1, hits: N };
+  let hits = 0;
+  outer: for (let i = 0; i < N; i++) {
+    for (const l of legs) if ((l.m.bits[i] === 1) !== (l.side === "yes")) continue outer;
+    hits++;
+  }
+  return { p: (hits + 0.5) / (N + 1), hits };
+}
+/* Parlay multiplier: product of market payouts, corrected for correlation between legs */
+function multOf(legs) {
+  if (!legs.length) return { mult: 0, naive: 0, corr: 1 };
+  let naive = 1, indep = 1;
+  for (const l of legs) { naive *= 100 / l.price; indep *= l.fair; }
+  const corr = indep / joint(legs).p;
+  // Picks that would exceed the cap are refused in tryLegs; the clamp only guards odd cases like removing a leg
+  return { mult: Math.min(MAX_MULT, naive * corr), raw: naive * corr, naive, corr };
+}
+
+/* ---------------- Game state ---------------- */
+/* One shared game per two-hour window: everyone in the window plays the same seeded game at their own pace */
+const GAME_MS = 2 * 3600e3;
+const gameNow = () => `g${Math.floor(Date.now() / GAME_MS)}`;
+const gameLabel = id => { const t = new Date(+id.slice(1) * GAME_MS), f = d => d.toLocaleTimeString([], { hour: "numeric" }); return `${f(t)}–${f(new Date(t.getTime() + GAME_MS))} game`; };
+const freshGame = () => ({ score: [0, 0], qtr: 1, clock: 900, off: 0, yl: 25, drive: 1, firstReceiver: 0, over: false, gameId: gameNow() });
+const G = freshGame();
+let M = [], slip = [], stake = 5, phase = "market", timeLeft = MARKET_SECS, tickId = 0, secId = 0, liveId = 0;
+let bank = 100, rec = { w: 0, l: 0 };
+try {
+  const sv = JSON.parse(localStorage.getItem("sportspredictionclash") || localStorage.getItem("snapmarket") || "null");
+  if (sv) { bank = sv.bank; rec = sv.rec; stake = sv.stake || 5; if (sv.game && sv.game.gameId === G.gameId) Object.assign(G, sv.game); }
+} catch (e) {}
+const save = () => { try { localStorage.setItem("sportspredictionclash", JSON.stringify({ bank, rec, stake, game: G })); } catch (e) {} };
+
+const spotTxt = (yl, off) => yl === 50 ? "midfield" : yl < 50 ? `own ${yl}` : `${T[1 - off].abbr} ${100 - yl}`;
+const ord = n => ["1st", "2nd", "3rd", "4th"][n - 1] || `${n}th`;
+const resultTxt = { TD: "Touchdown", FG: "Field goal", MISS: "Missed field goal", PUNT: "Punt", INT: "Interception", FUM: "Fumble", DOWNS: "Turnover on downs", SAFETY: "Safety", HALF: "Clock ran out" };
+
+function drawBoard(view) {
+  const v = view || { yl: G.yl, down: 1, dist: Math.min(10, 100 - G.yl), clock: G.clock, qtr: G.qtr };
+  [0, 1].forEach(i => {
+    const el = $("t" + i);
+    el.querySelector(".ab").textContent = T[i].abbr;
+    el.querySelector(".ab").style.color = T[i].color;
+    el.querySelector(".pts").textContent = G.score[i];
+    el.classList.toggle("has", G.off === i && !G.over);
+  });
+  $("clk").textContent = fmtClock(v.clock);
+  $("qt").textContent = G.over ? "Final" : `${ord(Math.min(v.qtr, 4))} qtr`;
+  const f = $("field"), x = yl => `${8.333 + yl * 0.83333}%`;
+  f.querySelector(".ez.l").style.background = T[G.off].color; f.querySelector(".ez.l").textContent = T[G.off].abbr;
+  f.querySelector(".ez.r").style.background = T[1 - G.off].color; f.querySelector(".ez.r").textContent = T[1 - G.off].abbr;
+  f.querySelector(".ball").style.left = x(v.yl);
+  f.querySelector(".los").style.left = x(v.yl);
+  f.querySelector(".fdl").style.left = x(Math.min(100, v.yl + v.dist));
+  $("sit").innerHTML = G.over ? "<b>Final</b>" : `<b>${T[G.off].abbr} ball</b> · ${ord(v.down)} & ${v.yl + v.dist >= 100 ? "Goal" : v.dist} at ${spotTxt(v.yl, G.off)}`;
+  $("drv").textContent = `Drive ${G.drive}`;
+}
+
+/* ---------------- Feed ---------------- */
+const feed = $("feed");
+function cardHTML(m, i, n) {
+  return `<div class="card-in glass">
+    <div class="c-top"><span><span class="tag">${m.tag}</span> · ${i + 1} of ${n}</span><span class="mono" data-vol></span></div>
+    <h2 class="q">${m.q}</h2>
+    <p class="rule">${m.rule}</p>
+    <div class="quote"><span class="chance" data-ch></span><span class="lab">chance · <span class="chg" data-chg></span> since open</span></div>
+    <svg class="spark" viewBox="0 0 300 100" preserveAspectRatio="none" aria-hidden="true"><path class="ar"/><polyline class="ln"/><line class="fair" x1="0" x2="300"/></svg>
+    <div class="sides">
+      <button class="side yes" data-side="yes"><span>YES</span><b data-ya></b><small data-yp></small></button>
+      <button class="side no" data-side="no"><span>NO</span><b data-na></b><small data-np></small></button>
+    </div>
+    <div class="foot"><span class="note" data-note></span><span>Swipe ← no · yes →</span></div>
+  </div><div class="stamp yes">YES</div><div class="stamp no">NO</div>`;
+}
+
+function renderFeed() {
+  feed.innerHTML = "";
+  M.forEach((m, i) => {
+    const el = document.createElement("article");
+    el.className = "card"; el.dataset.i = i;
+    el.innerHTML = cardHTML(m, i, M.length);
+    m.el = el;
+    el.querySelectorAll(".side").forEach(b => b.addEventListener("click", () => pick(m, b.dataset.side)));
+    bindSwipe(el, m);
+    feed.append(el);
+    paintCard(m);
+  });
+  const end = document.createElement("article");
+  end.className = "card endcard";
+  end.innerHTML = `<div class="card-in glass"><div class="c-top"><span class="tag">End of the feed</span></div>
+    <h2 class="q">That's all ${M.length}. Lock it in.</h2>
+    <div class="big mono" id="endMult">×—</div>
+    <p class="rule" id="endPays">Scroll back up to add picks, or snap the ball and watch the drive.</p>
+    <button class="snap" id="endSnap" style="align-self:flex-start">Snap the ball</button></div>`;
+  feed.append(end);
+  $("endSnap").addEventListener("click", snap);
+  feed.scrollTop = 0;
+}
+
+function legFor(m) { return slip.find(l => l.m === m); }
+function paintCard(m) {
+  const el = m.el; if (!el) return;
+  const q = s => el.querySelector(s);
+  const ya = yesAsk(m), na = noAsk(m), leg = legFor(m);
+  q("[data-ch]").textContent = `${Math.round(m.mid)}%`;
+  const d = Math.round(m.mid - m.open), chg = q("[data-chg]");
+  chg.textContent = d === 0 ? "flat" : `${d > 0 ? "▲" : "▼"}${Math.abs(d)}`; chg.className = `chg ${d > 0 ? "up" : d < 0 ? "dn" : ""}`;
+  q("[data-vol]").textContent = `$${(m.vol / 1000).toFixed(1)}k vol`;
+  q("[data-ya]").textContent = `${leg && leg.side === "yes" ? leg.price : ya}¢`;
+  q("[data-na]").textContent = `${leg && leg.side === "no" ? leg.price : na}¢`;
+  const pv = side => {
+    if (leg && leg.side === side) return "Picked · tap to remove";
+    if (!slip.length || (slip.length === 1 && leg)) return `pays ${(100 / (side === "yes" ? ya : na)).toFixed(2)}×`;
+    const r = tryLegs(m, side);
+    return r.err ? r.short : `slip → ×${fmtMult(r.mult)}`;
+  };
+  q("[data-yp]").textContent = pv("yes");
+  q("[data-np]").textContent = pv("no");
+  const y = q(".side.yes"), n = q(".side.no");
+  y.classList.toggle("on", !!leg && leg.side === "yes"); n.classList.toggle("on", !!leg && leg.side === "no");
+  // A side that can't join the current slip is dimmed; a card with neither side open is "locked" and skipped
+  const ry = !leg && slip.length > 0 ? tryLegs(m, "yes") : {}, rn = !leg && slip.length > 0 ? tryLegs(m, "no") : {};
+  const by = !!ry.err, bn = !!rn.err;
+  y.classList.toggle("off", (!!leg && leg.side === "no") || by); n.classList.toggle("off", (!!leg && leg.side === "yes") || bn);
+  el.classList.toggle("locked", by && bn);
+  const nt = q("[data-note]");
+  if (by && bn) { nt.textContent = [ry, rn].some(r => r.short.startsWith("over")) ? `Would push your slip past ×${MAX_MULT}` : "Doesn't fit your picks"; nt.dataset.auto = "1"; }
+  else if (nt.dataset.auto) { nt.textContent = ""; delete nt.dataset.auto; }
+  // sparkline
+  const h = m.hist, lo = Math.min(...h, m.p * 100) - 4, hi = Math.max(...h, m.p * 100) + 4, n0 = Math.max(h.length - 1, 1);
+  const Y = v => 100 - ((v - lo) / (hi - lo)) * 100;
+  const pts = h.map((v, i) => `${(i / n0) * 300},${Y(v).toFixed(1)}`).join(" ");
+  q(".ln").setAttribute("points", pts);
+  q(".ar").setAttribute("d", `M0,100 L${pts.split(" ").join(" L")} L300,100 Z`);
+  const fy = Y(m.p * 100).toFixed(1); const fl = q(".fair"); fl.setAttribute("y1", fy); fl.setAttribute("y2", fy);
+}
+const fmtMult = x => x >= 100 ? x.toFixed(0) : x >= 10 ? x.toFixed(1) : x.toFixed(2);
+
+function tryLegs(m, side) {
+  const others = slip.filter(l => l.m !== m);
+  const price = side === "yes" ? yesAsk(m) : noAsk(m);
+  const leg = { m, side, price, fair: side === "yes" ? m.p : 1 - m.p };
+  const trial = [...others, leg];
+  if (trial.length > MAX_LEGS) return { err: `${MAX_LEGS} picks max per drive.`, short: "slip full" };
+  const j = joint(trial);
+  if (j.hits < 4) return { err: "Can't pair this with your other picks. They almost never happen together.", short: "conflicts" };
+  if (others.length && j.p / joint(others).p > 0.97) return { err: "Your other picks already lock this in.", short: "already covered" };
+  const before = others.length ? multOf(others).mult : 1, mult = multOf(trial).raw;
+  if (mult > MAX_MULT) return { err: `This pick would push your slip past the ×${MAX_MULT} cap.`, short: `over ×${MAX_MULT} cap` };
+  if (mult / before < MIN_STEP) return { err: "Too safe to add. It barely moves your multiplier.", short: "too safe" };
+  return { leg, trial, mult };
+}
+
+function pick(m, side) {
+  if (phase !== "market") return;
+  const ex = legFor(m);
+  if (ex && ex.side === side) {
+    slip = slip.filter(l => l !== ex);
+    m.mid = clamp(m.mid + (side === "yes" ? -1 : 1), 2, 98);
+    note(m, "Removed from slip");
+  } else {
+    const r = tryLegs(m, side);
+    if (r.err) { note(m, r.err); toast(r.err); return; }
+    slip = r.trial;
+    m.mid = clamp(m.mid + (side === "yes" ? 1.2 : -1.2), 2, 98); // your order moves the book
+    m.vol += stake;
+    note(m, `Added ${side.toUpperCase()} at ${r.leg.price}¢`);
+    bumpMult();
+    const i = M.indexOf(m);
+    setTimeout(() => {
+      if (phase !== "market" || curIndex() !== i) return;
+      const k = nextOpen(i + 1);
+      if (k >= M.length && M.some(x => !legFor(x) && !x.el.classList.contains("locked")) === false) toast("Nothing else fits. Snap it!");
+      scrollToCard(k);
+    }, 420);
+  }
+  M.forEach(paintCard); paintSlip();
+}
+function nextOpen(k) { while (k < M.length && M[k].el.classList.contains("locked")) k++; return k; }
+function note(m, t) { const n = m.el && m.el.querySelector("[data-note]"); if (n) { n.textContent = t; delete n.dataset.auto; } }
+
+const curIndex = () => Math.round(feed.scrollTop / Math.max(1, feed.clientHeight));
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function scrollToCard(i) { feed.scrollTo({ top: i * feed.clientHeight, behavior: reduce ? "auto" : "smooth" }); }
+
+function bindSwipe(card, m) {
+  const inner = card.querySelector(".card-in"), sy = card.querySelector(".stamp.yes"), sn = card.querySelector(".stamp.no");
+  let x0 = 0, y0 = 0, dx = 0, drag = false, down = false, id = null;
+  const reset = () => { inner.classList.add("spring"); inner.style.transform = ""; sy.style.opacity = 0; sn.style.opacity = 0; };
+  card.addEventListener("pointerdown", e => {
+    if (phase !== "market" || e.target.closest("button")) return;
+    down = true; drag = false; dx = 0; x0 = e.clientX; y0 = e.clientY; id = e.pointerId;
+  });
+  card.addEventListener("pointermove", e => {
+    if (!down || e.pointerId !== id) return;
+    const ddx = e.clientX - x0, ddy = e.clientY - y0;
+    if (!drag) {
+      if (Math.abs(ddx) > 10 && Math.abs(ddx) > Math.abs(ddy) * 1.3) { drag = true; inner.classList.remove("spring"); try { card.setPointerCapture(id); } catch (_) {} }
+      else if (Math.abs(ddy) > 10) { down = false; return; }
+      else return;
+    }
+    dx = ddx;
+    inner.style.transform = `translateX(${dx}px) rotate(${dx / 28}deg)`;
+    sy.style.opacity = clamp(dx / 110, 0, 1); sn.style.opacity = clamp(-dx / 110, 0, 1);
+  });
+  const end = () => {
+    if (!down) return; down = false;
+    if (drag) { if (dx > 90) pick(m, "yes"); else if (dx < -90) pick(m, "no"); }
+    drag = false; reset();
+  };
+  card.addEventListener("pointerup", end);
+  card.addEventListener("pointercancel", end);
+}
+
+/* ---------------- Slip ---------------- */
+function bumpMult() { const x = $("mult"); x.classList.remove("bump"); void x.offsetWidth; x.classList.add("bump"); }
+/* Map the multiplier onto a 0..1 heat scale (log, so every pick warms it about the same) */
+function paintHeat(mult) {
+  const bar = $("slipbar").querySelector(".slip"), busted = slip.some(l => l.status === "lost");
+  const t = !slip.length || busted ? 0 : clamp(Math.log(mult) / Math.log(MAX_MULT), 0, 1);
+  bar.style.setProperty("--heat", t.toFixed(3));
+  bar.style.setProperty("--heat-h", (215 + 145 * t ** 1.1).toFixed(1));
+  bar.style.setProperty("--amp", `${t >= 0.6 ? (0.4 + ((t - 0.6) / 0.4) * 2.6).toFixed(2) : 0}px`);
+  bar.classList.toggle("busted", busted);
+  $("heat").classList.toggle("shake", t >= 0.6);
+}
+function paintSlip() {
+  const { mult, naive, corr } = multOf(slip);
+  paintHeat(mult);
+  $("legN").textContent = slip.length;
+  $("mult").textContent = slip.length ? `×${fmtMult(mult)}` : "×—";
+  const pays = stake * mult;
+  if (phase === "market") {
+    $("pays").textContent = slip.length ? `${money(stake)} pays ${money(pays)} if all ${slip.length} hit` : "Swipe a market to start your slip";
+    $("snap").textContent = slip.length ? "Snap" : "Watch";
+    $("snap").disabled = slip.length > 0 && stake > bank;
+    if (slip.length && stake > bank) $("pays").textContent = "Stake is more than your bank. Lower it.";
+  }
+  $("bank").textContent = money(bank);
+  $("rec").textContent = `${rec.w}–${rec.l}`;
+  document.querySelectorAll("#stakes button").forEach(b => { b.classList.toggle("on", +b.dataset.s === stake); b.disabled = phase !== "market"; });
+  const em = $("endMult"); if (em) { em.textContent = slip.length ? `×${fmtMult(mult)}` : "×—"; $("endPays").textContent = slip.length ? `${slip.length} picks · ${money(stake)} pays ${money(pays)}` : "No picks yet. Scroll back up, or just watch this drive."; }
+  // sheet
+  $("sheetLegs").innerHTML = slip.length ? slip.map((l, i) => `<li class="leg"><span class="sd ${l.side}">${l.side.toUpperCase()}</span><span>${l.m.q}</span><span class="st">${l.price}¢ ${phase === "market" ? `<button class="x" data-rm="${i}" aria-label="Remove">×</button>` : ""}</span></li>`).join("") : `<li class="leg"><span></span><span>No picks yet. Swipe right for YES, left for NO.</span><span></span></li>`;
+  $("sheetLegs").querySelectorAll("[data-rm]").forEach(b => b.addEventListener("click", () => { const l = slip[+b.dataset.rm]; pick(l.m, l.side); }));
+  $("sheetMath").innerHTML = slip.length ? `Market payouts multiplied: <b>×${fmtMult(naive)}</b><br>Correlation adjustment: <b>×${corr.toFixed(2)}</b> ${corr < 0.98 ? "(your picks tend to happen together, so the combo is likelier than it looks)" : corr > 1.02 ? "(your picks rarely happen together, so the combo pays more)" : ""}<br>Slip multiplier: <b>×${fmtMult(mult)}</b> of ×${MAX_MULT} max · ${money(stake)} pays <b>${money(pays)}</b><br>Model fair odds: <b>×${fmtMult(1 / joint(slip).p)}</b> · House edge <b>${((1 - mult * joint(slip).p) * 100).toFixed(1)}%</b>` : "";
+}
+
+/* ---------------- Phases ---------------- */
+function startMarkets() {
+  phase = "market"; slip = []; timeLeft = MARKET_SECS;
+  if (G.over) return showFinal();
+  M = buildMarkets();
+  $("live").hidden = true; feed.hidden = false; $("result").hidden = true;
+  $("phase").classList.remove("live");
+  $("phaseTxt").innerHTML = `<b>${M.length}</b> markets · close at the snap`;
+  drawBoard(); renderFeed(); paintSlip();
+  clearInterval(tickId); clearInterval(secId);
+  tickId = setInterval(tick, 1200);
+  secId = setInterval(() => { timeLeft--; paintTimer(); if (timeLeft <= 0) snap(); }, 1000);
+  paintTimer();
+}
+function paintTimer() {
+  $("timer").textContent = fmtClock(Math.max(0, timeLeft));
+  $("bar").style.width = `${(timeLeft / MARKET_SECS) * 100}%`;
+  $("phase").classList.toggle("hurry", phase === "market" && timeLeft <= HURRY_SECS);
+}
+function tick() {
+  for (const m of M) {
+    m.mid = clamp(m.mid + 0.08 * (m.p * 100 - m.mid) + randn() * 0.8, 2, 98);
+    m.hist.push(m.mid); if (m.hist.length > 60) m.hist.shift();
+    if (R() < 0.5) m.vol += Math.round(R() * 400);
+  }
+  const i = curIndex();
+  M.forEach((m, k) => { if (Math.abs(k - i) <= 1) paintCard(m); });
+}
+
+function snap() {
+  if (phase !== "market") return;
+  if (slip.length && stake > bank) { toast("Lower your stake first."); return; }
+  clearInterval(tickId); clearInterval(secId);
+  phase = "live";
+  if (slip.length) { bank -= stake; save(); }
+  // Lock the slip in at the snap, so seeing the drive and reloading can't change this drive's ranked result
+  recordDrive(`${G.gameId}-d${G.drive}`, { pending: true, sig: slipSig(), mult: slip.length ? +multOf(slip).mult.toFixed(2) : 0, picks: slip.length, won: false, stake: slip.length ? stake : 0, payout: 0, at: Date.now() });
+  slip.forEach(l => l.status = null);
+  $("sheet").hidden = true;
+  feed.hidden = true; $("live").hidden = false; $("live").scrollTop = 0;
+  $("pbp").innerHTML = "";
+  $("phase").classList.remove("hurry"); $("phase").classList.add("live");
+  $("phaseTxt").innerHTML = `<b>● Live</b> · ${T[G.off].abbr} drive ${G.drive}`;
+  $("timer").textContent = ""; $("bar").style.width = "0";
+  $("snap").textContent = "Skip"; $("snap").disabled = false;
+  paintSlip(); paintLive(null);
+  reseed(`${G.gameId}:${G.drive}:play`);
+  const res = simDrive({ yl: G.yl, qtr: G.qtr, clock: G.clock, trailing: G.score[G.off] < G.score[1 - G.off] }, true);
+  let k = 0;
+  const step = () => {
+    const e = res.log[k], done = k === res.log.length - 1;
+    addPbp(e); drawBoard(e); settle(e.st, done);
+    k++;
+    if (done) { clearInterval(liveId); endDrive(res); }
+  };
+  liveId = setInterval(step, 1500);
+  live.skip = () => { clearInterval(liveId); while (phase === "live") step(); };
+}
+const live = { skip: null };
+
+function addPbp(e) {
+  const li = document.createElement("li");
+  li.className = e.tag;
+  li.innerHTML = `<span class="t">${fmtClock(e.clock)}</span><span>${e.text}</span>`;
+  $("pbp").prepend(li);
+}
+function settle(st, done) {
+  for (const l of slip) {
+    if (l.status) continue;
+    const o = outcome(l.m, st, done);
+    if (o !== null) l.status = o === (l.side === "yes") ? "won" : "lost";
+  }
+  paintLive(st);
+}
+function paintLive(st) {
+  const prog = l => {
+    if (l.status === "won") return "✓ hit";
+    if (l.status === "lost") return "✗ miss";
+    if (st && l.m.kind === "over") return `${Math.min(st[l.m.stat], l.m.L)}/${l.m.L}`;
+    if (st && l.m.stat === "yards") return `${st.yards}/${l.m.L} yds`;
+    return "live";
+  };
+  $("liveLegs").innerHTML = slip.length
+    ? slip.map(l => `<li class="leg ${l.status || ""}"><span class="sd ${l.side}">${l.side.toUpperCase()}</span><span>${l.m.q}</span><span class="st">${prog(l)}</span></li>`).join("")
+    : `<li class="leg"><span></span><span>No slip this drive. Just watching.</span><span></span></li>`;
+  if (phase === "live" && slip.length) {
+    const lost = slip.find(l => l.status === "lost"), won = slip.filter(l => l.status === "won").length;
+    $("pays").textContent = lost ? `Busted: ${lost.m.q}` : `${won} of ${slip.length} hit · pays ${money(stake * multOf(slip).mult)}`;
+  }
+  paintHeat(multOf(slip).mult);
+}
+
+function endDrive(res) {
+  phase = "done";
+  const st = res.st, off = G.off, driveNo = G.drive, key = `${G.gameId}-d${driveNo}`;
+  const note = applyDrive(res);
+  if (note) addPbp({ clock: G.clock, text: note, tag: "" });
+  const r = $("result"); r.hidden = false;
+  const sum = `${T[off].abbr}: ${resultTxt[st.result]} · ${st.plays} plays, ${st.yards} yds, ${fmtClock(st.time)}`;
+  if (!slip.length) { r.className = "result"; r.innerHTML = `<h3>${resultTxt[st.result]}</h3><p>${sum}</p>`; }
+  else if (slip.every(l => l.status === "won")) {
+    const win = stake * multOf(slip).mult; bank += win; rec.w++;
+    r.className = "result win"; r.innerHTML = `<h3>Slip hits +${money(win)}</h3><p>All ${slip.length} picks landed at ×${fmtMult(multOf(slip).mult)}.</p><p>${sum}</p>`;
+  } else {
+    rec.l++;
+    const lost = slip.filter(l => l.status === "lost");
+    r.className = "result lose"; r.innerHTML = `<h3>Busted −${money(stake)}</h3><p>Missed: ${lost.map(l => `${l.m.q} (${l.side.toUpperCase()})`).join(", ")}.</p><p>${sum}</p>`;
+  }
+  const m = slip.length ? multOf(slip).mult : 0, won = slip.length > 0 && slip.every(l => l.status === "won");
+  recordDrive(key, { sig: slipSig(), mult: +m.toFixed(2), picks: slip.length, won, stake: slip.length ? stake : 0, payout: won ? +(stake * m).toFixed(2) : 0, at: Date.now() }, true);
+  simulateBots(key, st);
+  showBoard(key, driveNo);
+  save(); drawBoard(); paintSlip();
+  $("phaseTxt").innerHTML = `<b>Drive over</b> · ${resultTxt[st.result]}`;
+  $("phase").classList.remove("live");
+  $("snap").textContent = G.over ? "Final" : "Next";
+  if (bank < 1) { bank = 100; save(); toast("Bank reloaded with $100 play money."); paintSlip(); }
+}
+
+function applyDrive(res, g = G) {
+  const off = g.off, def = 1 - off, st = res.st, yl = res.yl;
+  g.qtr = res.qtr; g.clock = res.clock;
+  let next = 25, note = "";
+  const kick = () => { g.clock = Math.max(0, g.clock - 5); if (R() < 0.68) { note += " Kickoff, touchback."; return 25; } const y = clamp(Math.round(24 + randn() * 8), 8, 60); note += ` Kickoff returned to the ${y}.`; return y; };
+  switch (st.result) {
+    case "TD": { const xp = R() < 0.95; g.score[off] += xp ? 7 : 6; note = `Extra point ${xp ? "is good" : "is missed"}.`; next = kick(); break; }
+    case "FG": g.score[off] += 3; next = kick(); break;
+    case "MISS": next = Math.max(20, 100 - (yl - 7)); note = `${T[def].abbr} take over at the spot of the kick.`; break;
+    case "PUNT": { const spot = yl + st.punt; next = spot >= 100 ? 20 : 100 - spot; note = spot >= 100 ? "Punt sails into the end zone. Touchback." : `${T[def].abbr} fair catch.`; break; }
+    case "INT": next = clamp(100 - yl - Math.round(8 + randn() * 8), 5, 95); note = `${T[def].abbr} return it.`; break;
+    case "FUM": case "DOWNS": next = 100 - yl; break;
+    case "SAFETY": g.score[def] += 2; next = clamp(Math.round(38 + randn() * 8), 20, 60); note = "Free kick after the safety."; break;
+  }
+  g.off = def; g.yl = next; g.drive++;
+  if (st.result === "HALF" || g.clock <= 0) {
+    if (g.qtr >= 4) { g.over = true; note += " Final whistle."; }
+    else if (g.qtr === 2) { g.qtr = 3; g.clock = 900; g.off = 1 - g.firstReceiver; g.yl = 25; note += ` Halftime. ${T[g.off].abbr} receive to open the 3rd.`; }
+    else { g.qtr++; g.clock = 900; }
+  }
+  return note.trim();
+}
+
+function showFinal() {
+  phase = "final";
+  clearInterval(tickId); clearInterval(secId);
+  const [a, b] = G.score, w = a === b ? "Tie game" : `${T[a > b ? 0 : 1].abbr} win`;
+  feed.hidden = false; $("live").hidden = true;
+  feed.innerHTML = `<article class="card endcard"><div class="card-in glass"><div class="c-top"><span class="tag">Final</span></div>
+    <h2 class="q">${w}, ${Math.max(a, b)}–${Math.min(a, b)}</h2>
+    <div class="big mono">${money(bank)}</div><p class="rule">Bank after the game · ${rec.w} slips hit, ${rec.l} busted.</p>
+    <p class="rule">${gameNow() === G.gameId ? `A replay of this game is unranked: your first result on each drive is the one on the leaderboard. The next ranked game starts at ${new Date((+G.gameId.slice(1) + 1) * GAME_MS).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.` : "A new ranked game is ready."}</p>
+    <button class="snap" id="newGame" style="align-self:flex-start">${gameNow() === G.gameId ? "Replay" : "Play the new game"}</button></div></article>`;
+  $("newGame").addEventListener("click", newGame);
+  $("phaseTxt").innerHTML = "<b>Final</b>"; $("timer").textContent = ""; $("bar").style.width = "0";
+  $("snap").textContent = "New"; drawBoard(); paintSlip();
+}
+function newGame() { Object.assign(G, freshGame()); save(); startMarkets(); }
+
+/* ---------------- Drive leaderboard (shared through the artifact's db) ----------------
+   scores/<player id> = { results: { "<game>-d<drive>": { mult, picks, won, stake, payout, at } } }
+   Everyone reads every player's doc; each player writes only their own. */
+const LB = { db: null, user: null, me: null, canWrite: false, docs: new Map(), mine: {}, bots: {}, key: "", drive: 0, queue: Promise.resolve(), paintId: 0,
+  friends: new Set(), scope: "global", fqueue: Promise.resolve(), ftimer: 0, searchId: 0 };
+try { LB.friends = new Set(JSON.parse(localStorage.getItem("sportspredictionclash.friends") || localStorage.getItem("snapmarket.friends") || "[]")); LB.scope = (localStorage.getItem("sportspredictionclash.lbscope") || localStorage.getItem("snapmarket.lbscope")) === "friends" ? "friends" : "global"; } catch (e) {}
+
+/* ---------------- Simulated players ----------------
+   A roster of bots with their own betting styles. Each drive, the ones who show up build a slip from the
+   same feed at opening prices and settle against the same drive, seeded by game and drive so every
+   real player sees the same bots with the same results. Set SIM_PLAYERS to false to turn them off. */
+const SIM_PLAYERS = true;
+const BOTS = [
+  // legs: slip size range · dog: chance of taking the cheaper (underdog) side · play: chance of betting a given drive
+  { name: "BlitzKing", color: "#d9480f", legs: [5, 8], dog: 0.8, play: 0.9, stakes: [1, 5] },
+  { name: "ChainMover", color: "#2b8a3e", legs: [2, 3], dog: 0.2, play: 0.95, stakes: [10, 25] },
+  { name: "RedZoneRita", color: "#c2255c", legs: [3, 5], dog: 0.5, play: 0.85, stakes: [5, 10] },
+  { name: "PuntGod", color: "#5f3dc4", legs: [1, 2], dog: 0.15, play: 0.7, stakes: [25] },
+  { name: "HailMaryHank", color: "#e8590c", legs: [6, 8], dog: 0.9, play: 0.75, stakes: [1] },
+  { name: "SlantRoute", color: "#1971c2", legs: [3, 4], dog: 0.4, play: 0.8, stakes: [5] },
+  { name: "TwoMinuteTess", color: "#0c8599", legs: [2, 5], dog: 0.55, play: 0.65, stakes: [5, 10, 25] },
+  { name: "CoverTwo", color: "#5c940d", legs: [2, 4], dog: 0.3, play: 0.75, stakes: [10] },
+  { name: "PocketPasser", color: "#364fc7", legs: [1, 3], dog: 0.35, play: 0.8, stakes: [5, 10] },
+  { name: "GoalLineGabe", color: "#a61e4d", legs: [4, 6], dog: 0.65, play: 0.7, stakes: [1, 5] },
+  { name: "SafetyValve", color: "#087f5b", legs: [1, 2], dog: 0.1, play: 0.85, stakes: [10, 25] },
+  { name: "Pick6Paige", color: "#862e9c", legs: [3, 6], dog: 0.7, play: 0.6, stakes: [1, 5] },
+  { name: "AudibleAndy", color: "#e67700", legs: [2, 3], dog: 0.45, play: 0.8, stakes: [5] },
+  { name: "FlexBone", color: "#2f9e44", legs: [1, 3], dog: 0.25, play: 0.75, stakes: [5, 10] },
+  { name: "NickelPackage", color: "#1864ab", legs: [2, 4], dog: 0.5, play: 0.7, stakes: [5, 10] },
+  { name: "OnsideKiki", color: "#c92a2a", legs: [7, 8], dog: 0.95, play: 0.5, stakes: [1] },
+];
+
+function botSlip(bot, r) {
+  const target = bot.legs[0] + Math.floor(r() * (bot.legs[1] - bot.legs[0] + 1));
+  const order = M.slice();
+  for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+  const legs = [];
+  for (const m of order) {
+    if (legs.length >= target) break;
+    const yesIsDog = m.open < 50, side = (r() < bot.dog) === yesIsDog ? "yes" : "no";
+    const price = Math.min(99, Math.ceil(Math.max((side === "yes" ? m.open : 100 - m.open) + 1, (side === "yes" ? m.p : 1 - m.p) * 100 + 0.5)));
+    const trial = [...legs, { m, side, price, fair: side === "yes" ? m.p : 1 - m.p }];
+    // Same rules a real player's slip follows
+    const j = joint(trial);
+    if (j.hits < 4 || (legs.length && j.p / joint(legs).p > 0.97)) continue;
+    const before = legs.length ? multOf(legs).mult : 1, raw = multOf(trial).raw;
+    if (raw > MAX_MULT || raw / before < MIN_STEP) continue;
+    legs.push(trial[trial.length - 1]);
+  }
+  return legs;
+}
+
+function simulateBots(key, st) {
+  if (!SIM_PLAYERS) return;
+  const r = makeRng(`${key}:bots`), rows = [];
+  BOTS.forEach((bot, i) => {
+    if (r() > bot.play) return;
+    const legs = botSlip(bot, r);
+    if (!legs.length) return;
+    const won = legs.every(l => outcome(l.m, st, true) === (l.side === "yes"));
+    const mult = multOf(legs).mult, stk = bot.stakes[Math.floor(r() * bot.stakes.length)];
+    rows.push({ uid: `bot:${i}`, bot, mult: +mult.toFixed(2), picks: legs.length, won, stake: stk, payout: won ? +(stk * mult).toFixed(2) : 0, at: i });
+  });
+  LB.bots[key] = rows;
+}
+const KEEP_GAMES = 12; // prune results older than a day of games
+(async () => {
+  if (!window.claude || !window.claude.use) return;
+  const [db, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+  if (!db) return;
+  LB.db = db; LB.user = user;
+  LB.me = user ? await user.id() : null;
+  LB.canWrite = !!LB.me && (user ? (await user.can("data.write")) !== false : true);
+  // Friends list lives in the player's private subtree: nobody else, the owner included, can read it
+  if (LB.me) {
+    try { const d = await db.doc(`data/users/${LB.me}/social`).get(); if (d.exists) for (const f of d.data().friends || []) LB.friends.add(f); } catch (e) {}
+  }
+  db.collection("scores").onSnapshot(snap => {
+    LB.docs = new Map(snap.docs.map(d => [d.id, d.data()]));
+    paintBoard();
+  }, () => {});
+  paintBoard();
+})();
+
+const slipSig = () => slip.map(l => `${l.m.id}:${l.side}`).sort().join(",");
+
+/* Every player writes their own results, so a stored result is only shown if it checks out. The feed, the
+   outcome and the best price each leg could have had are all reproducible from the game id and drive, so a
+   claimed win or multiplier that doesn't match the replay is dropped. This stops edited numbers; it can't stop
+   someone who runs the engine before betting (outcomes are predictable without a server). */
+const replays = new Map();
+function replayDrive(key) {
+  if (replays.has(key)) return replays.get(key);
+  const gameId = key.slice(0, key.indexOf("-d")), drive = Number(key.slice(key.indexOf("-d") + 2));
+  const saved = rng;   // never disturb the live game's random stream
+  let out = null;
+  try {
+    const g = { ...freshGame(), gameId };
+    const start = () => ({ yl: g.yl, qtr: g.qtr, clock: g.clock, trailing: g.score[g.off] < g.score[1 - g.off] });
+    for (let d = 1; d < drive && !g.over; d++) { reseed(`${gameId}:${d}:play`); applyDrive(simDrive(start(), true), g); }
+    if (!g.over && g.drive === drive && drive >= 1) {
+      const markets = buildMarkets(g);
+      reseed(`${gameId}:${drive}:play`);
+      out = { markets, st: simDrive(start(), false) };
+    }
+  } catch (e) { out = null; } finally { rng = saved; }
+  replays.set(key, out);
+  return out;
+}
+const isNum = (x, lo, hi) => typeof x === "number" && Number.isFinite(x) && x >= lo && x <= hi;
+/** A clean copy of a stored result, or null if it is malformed or doesn't match the replay. */
+function checkEntry(key, uid, e) {
+  if (!e || typeof e !== "object") return null;
+  if (!isNum(e.mult, 0, MAX_MULT) || !isNum(e.picks, 0, MAX_LEGS) || !Number.isInteger(e.picks) || typeof e.won !== "boolean"
+    || !isNum(e.payout, 0, 25 * MAX_MULT) || ![0, 1, 5, 10, 25].includes(e.stake) || typeof e.sig !== "string" || e.sig.length > 400) return null;
+  const clean = { uid, mult: e.mult, picks: e.picks, won: e.won, stake: e.stake, payout: e.payout, pending: e.pending === true, at: isNum(e.at, 0, 1e15) ? e.at : 0 };
+  const legs = e.sig ? e.sig.split(",") : [];
+  if (legs.length !== e.picks || new Set(legs.map(l => l.split(":")[0])).size !== legs.length) return null;
+  if (!e.won) return clean;                          // a loss or a pending slip claims nothing
+  if (Math.abs(e.payout - e.stake * e.mult) > 0.05) return null;
+  const r = replayDrive(key);
+  if (!r) return null;
+  const chosen = [];
+  for (const l of legs) {
+    const [id, side] = l.split(":"), m = r.markets.find(x => x.id === id);
+    if (!m || (side !== "yes" && side !== "no") || outcome(m, r.st, true) !== (side === "yes")) return null;
+    const fair = side === "yes" ? m.p : 1 - m.p;
+    chosen.push({ m, side, fair, price: Math.min(99, Math.ceil(fair * 100 + 0.5)) });
+  }
+  // The most these legs could have paid at the lowest price the market allows
+  return e.mult <= multOf(chosen).mult * 1.001 + 0.01 ? clean : null;
+}
+// The first slip snapped on a drive is the ranked one; settling may only resolve that same slip
+const mayWrite = (old, entry, settle) => !old || (settle && old.pending && old.sig === entry.sig);
+function recordDrive(key, entry, settle = false) {
+  if (mayWrite(LB.mine[key], entry, settle)) LB.mine[key] = entry;
+  if (!LB.db || !LB.canWrite) return;
+  LB.queue = LB.queue.then(async () => {
+    const ref = LB.db.doc(`scores/${LB.me}`);
+    const cur = await ref.get();
+    const results = { ...((cur.exists && cur.data().results) || {}) };
+    if (!mayWrite(results[key], entry, settle)) return;
+    results[key] = entry;
+    const oldest = +G.gameId.slice(1) - KEEP_GAMES;
+    for (const k of Object.keys(results)) if (+k.slice(1, k.indexOf("-")) < oldest) delete results[k];
+    await ref.set({ results });
+  }).catch(e => { if (e && e.code === "invalid_argument") LB.canWrite = false; paintBoard(); });
+}
+
+function showBoard(key, drive) {
+  LB.key = key; LB.drive = drive;
+  $("lb").hidden = false;
+  $("lbTitle").textContent = `Drive ${drive} leaderboard`;
+  $("lbGame").textContent = gameLabel(key.slice(0, key.indexOf("-")));
+  paintBoard();
+}
+
+async function paintBoard() {
+  if (!LB.key || $("lb").hidden) return;
+  const id = ++LB.paintId, key = LB.key;
+  const rows = [];
+  let hidden = 0;
+  for (const [uid, d] of LB.docs) {
+    const e = d && typeof d.results === "object" && d.results ? d.results[key] : null;
+    if (!e) continue;
+    const ok = checkEntry(key, uid, e);
+    if (ok) rows.push(ok); else hidden++;
+  }
+  // Show my own result right away, before the store confirms it (or when there is no store)
+  const meKey = LB.me || "me";
+  if (!rows.some(r => r.uid === meKey) && LB.mine[key]) rows.push({ uid: meKey, ...LB.mine[key] });
+  rows.push(...(LB.bots[key] || []));
+  if (LB.scope === "friends") for (let i = rows.length - 1; i >= 0; i--) if (rows[i].uid !== meKey && !LB.friends.has(rows[i].uid)) rows.splice(i, 1);
+  const winners = rows.filter(r => r.won).sort((a, b) => b.mult - a.mult || a.at - b.at);
+  const playing = rows.filter(r => r.pending).length;
+  const busted = rows.filter(r => r.picks > 0 && !r.won && !r.pending).length, watched = rows.filter(r => !r.picks && !r.pending).length;
+  const top = winners.slice(0, 5), myRank = winners.findIndex(r => r.uid === meKey);
+  if (myRank >= 5) top.push(winners[myRank]);
+  const ps = LB.user ? await LB.user.profiles(top.filter(r => !r.bot && r.uid !== "me").map(r => r.uid)) : {};
+  if (id !== LB.paintId) return;
+  const list = $("lbList");
+  list.replaceChildren();
+  if (!top.length) {
+    const li = document.createElement("li"); li.className = "lb-empty";
+    li.textContent = LB.scope === "friends" && !LB.friends.size ? "Add friends to see how they did on each drive."
+      : rows.length ? `No ${LB.scope === "friends" ? "friend's " : ""}slip has hit on this drive yet.` : "No results yet for this drive.";
+    list.append(li);
+  }
+  for (const r of top) {
+    const p = ps[r.uid], isMe = r.uid === meKey, rank = winners.indexOf(r) + 1;
+    const li = document.createElement("li"); li.className = `lb-row${isMe ? " me" : ""}${rank === 1 ? " first" : ""}`;
+    const rk = document.createElement("span"); rk.className = "rk"; rk.textContent = rank;
+    let av;
+    if (r.bot) { av = document.createElement("span"); av.className = "av bot"; av.style.background = r.bot.color; av.textContent = r.bot.name.replace(/[^A-Z]/g, "").slice(0, 2); }
+    else { av = document.createElement("img"); av.className = "av"; av.alt = ""; if (p && p.avatarUrl) av.src = p.avatarUrl; else av.hidden = true; }
+    const nm = document.createElement("span"); nm.className = "nm";
+    nm.textContent = r.bot ? r.bot.name : isMe ? (p && p.name ? `${p.name} (you)` : "You") : (p && p.name) || "Player";
+    if (r.bot) { const tg = document.createElement("small"); tg.className = "sim"; tg.textContent = "Sim"; nm.append(" ", tg); }
+    const mx = document.createElement("span"); mx.className = "mx"; mx.textContent = `×${fmtMult(r.mult)}`;
+    const po = document.createElement("span"); po.className = "po"; po.textContent = `${r.picks} ${r.picks === 1 ? "pick" : "picks"} · +${money(r.payout)}`;
+    li.append(rk, av, nm, mx, po);
+    list.append(li);
+  }
+  const counts = [`${winners.length} hit`, `${busted} busted`]; if (watched) counts.push(`${watched} watched`); if (playing) counts.push(`${playing} still playing`);
+  let foot = `${LB.scope === "friends" ? "You and friends: " : ""}${rows.length} ${rows.length === 1 ? "player" : "players"} so far · ${counts.join(" · ")}. Updates live as others finish this drive.`;
+  const sims = rows.filter(r => r.bot).length;
+  if (hidden) foot += ` ${hidden} ${hidden === 1 ? "result was" : "results were"} hidden because ${hidden === 1 ? "it" : "they"} didn't match the drive.`;
+  if (sims) foot = foot.replace(" so far", ` so far (${sims} simulated)`);
+  if (!LB.db) foot = `${foot.replace(" Updates live as others finish this drive.", "")} Open this page signed in to claude.ai to see real players too.`;
+  else if (!LB.canWrite) foot = `${foot} You can view the board, but your results aren't saved with your access level.`;
+  $("lbFoot").textContent = foot;
+}
+
+/* ---------------- Friends ---------------- */
+function setScope(scope) {
+  LB.scope = scope;
+  try { localStorage.setItem("sportspredictionclash.lbscope", scope); } catch (e) {}
+  $("lbGlobal").setAttribute("aria-selected", scope === "global");
+  $("lbFriends").setAttribute("aria-selected", scope === "friends");
+  paintBoard();
+}
+function saveFriends() {
+  const list = [...LB.friends];
+  try { localStorage.setItem("sportspredictionclash.friends", JSON.stringify(list)); } catch (e) {}
+  if (!LB.db || !LB.me) return;
+  clearTimeout(LB.ftimer); // one write per pause in a burst of follows
+  LB.ftimer = setTimeout(() => { LB.fqueue = LB.fqueue.then(() => LB.db.doc(`data/users/${LB.me}/social`).set({ friends: [...LB.friends] })).catch(() => {}); }, 600);
+}
+function toggleFriend(uid) {
+  if (LB.friends.has(uid)) LB.friends.delete(uid); else LB.friends.add(uid);
+  saveFriends(); renderFriendLists(); paintBoard();
+}
+function personRow(uid, name, avatarUrl, bot) {
+  const li = document.createElement("li"); li.className = "fr-row";
+  let av;
+  if (bot) { av = document.createElement("span"); av.className = "av bot"; av.style.background = bot.color; av.textContent = bot.name.replace(/[^A-Z]/g, "").slice(0, 2); }
+  else { av = document.createElement("img"); av.className = "av"; av.alt = ""; if (avatarUrl) av.src = avatarUrl; else av.hidden = true; }
+  const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = name;
+  const on = LB.friends.has(uid), btn = document.createElement("button");
+  btn.className = `follow${on ? " on" : ""}`; btn.textContent = on ? "Following" : "Follow";
+  btn.setAttribute("aria-pressed", on);
+  btn.addEventListener("click", () => toggleFriend(uid));
+  li.append(av, nm, btn);
+  return li;
+}
+function noteRow(text) { const li = document.createElement("li"); li.className = "fr-note"; li.textContent = text; return li; }
+async function renderFriendLists() {
+  const ids = [...LB.friends], real = ids.filter(u => !u.startsWith("bot:"));
+  const ps = LB.user && real.length ? await LB.user.profiles(real) : {};
+  const mine = ids.map(u => u.startsWith("bot:") ? (BOTS[+u.slice(4)] ? personRow(u, BOTS[+u.slice(4)].name, null, BOTS[+u.slice(4)]) : null)
+    : personRow(u, (ps[u] && ps[u].name) || "Player", ps[u] && ps[u].avatarUrl, null)).filter(Boolean);
+  $("friendMine").replaceChildren(...(mine.length ? mine : [noteRow("You're not following anyone yet.")]));
+  $("friendBots").replaceChildren(...BOTS.map((b, i) => personRow(`bot:${i}`, b.name, null, b)));
+  searchPeople($("friendSearch").value.trim());
+}
+async function searchPeople(q) {
+  const id = ++LB.searchId, box = $("friendResults");
+  if (!LB.user || !LB.me) { box.replaceChildren(noteRow("Open this page signed in to claude.ai to find real people.")); return; }
+  const hits = (await LB.user.search(q)).filter(h => !h.isMe);
+  if (id !== LB.searchId) return;
+  box.replaceChildren(...(hits.length ? hits.map(h => personRow(h.id, h.name, h.avatarUrl, null))
+    : [noteRow(q ? "No one found. Search covers people in your organization." : "Type a name to find people in your organization.")]));
+}
+function openFriends() { $("friendSheet").hidden = false; renderFriendLists(); }
+
+function toast(t) {
+  const el = document.createElement("div"); el.className = "toast"; el.textContent = t; $("app").append(el);
+  setTimeout(() => el.remove(), 1800);
+}
+
+/* ---------------- Wiring ---------------- */
+$("snap").addEventListener("click", () => {
+  if (phase === "market") snap();
+  else if (phase === "live") live.skip && live.skip();
+  else if (phase === "done") startMarkets();
+  else if (phase === "final") newGame();
+});
+$("stakes").addEventListener("click", e => { const b = e.target.closest("button"); if (!b || phase !== "market") return; stake = +b.dataset.s; save(); paintSlip(); M.forEach(paintCard); });
+$("legsBtn").addEventListener("click", () => { $("sheet").hidden = !$("sheet").hidden; });
+$("sheetClose").addEventListener("click", () => { $("sheet").hidden = true; });
+$("lbGlobal").addEventListener("click", () => setScope("global"));
+$("lbFriends").addEventListener("click", () => setScope("friends"));
+$("lbAdd").addEventListener("click", openFriends);
+$("friendClose").addEventListener("click", () => { $("friendSheet").hidden = true; });
+$("friendSearch").addEventListener("input", e => searchPeople(e.target.value.trim()));
+setScope(LB.scope);
+let scrollT = 0;
+feed.addEventListener("scroll", () => { clearTimeout(scrollT); scrollT = setTimeout(() => { const m = M[curIndex()]; if (m && phase === "market") paintCard(m); }, 80); }, { passive: true });
+document.addEventListener("keydown", e => {
+  if (phase !== "market" || e.target.closest("input")) return;
+  const i = curIndex();
+  if (e.key === "ArrowDown" || e.key === "j") { e.preventDefault(); scrollToCard(i + 1); }
+  else if (e.key === "ArrowUp" || e.key === "k") { e.preventDefault(); scrollToCard(Math.max(0, i - 1)); }
+  else if (e.key === "ArrowRight" && M[i]) pick(M[i], "yes");
+  else if (e.key === "ArrowLeft" && M[i]) pick(M[i], "no");
+});
+
+// Content scrolls under the floating bars; pad the feed by their measured heights
+const chrome = new ResizeObserver(() => {
+  $("app").style.setProperty("--top-h", `${$("topbar").offsetHeight}px`);
+  $("app").style.setProperty("--bot-h", `${$("slipbar").offsetHeight}px`);
+});
+chrome.observe($("topbar")); chrome.observe($("slipbar"));
+
+startMarkets();
+})();
+</script>
