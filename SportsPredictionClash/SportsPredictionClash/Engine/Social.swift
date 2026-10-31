@@ -38,19 +38,20 @@ struct Mission: Identifiable {
     let id: String
     let title: String
     let goal: Int
-    let reward: Int
     let count: (DayProgress) -> Int
+    /// Set by the server's table, so the app never promises more than the server pays.
+    var reward: Int { Economy.missionRewards[id] ?? 0 }
 }
 
 /// Three of these are picked each day, the same three for everyone.
 let missionPool: [Mission] = [
-    Mission(id: "play5", title: "Play 5 drives", goal: 5, reward: 100) { $0.drives },
-    Mission(id: "hit2", title: "Hit 2 slips", goal: 2, reward: 200) { $0.hits },
-    Mission(id: "big", title: "Snap a slip with 3+ picks", goal: 1, reward: 100) { $0.bigSlips },
-    Mission(id: "tail", title: "Tail a friend's slip", goal: 1, reward: 100) { $0.tails },
-    Mission(id: "share", title: "Share a slip", goal: 1, reward: 50) { $0.shares },
-    Mission(id: "follow", title: "Follow 2 players", goal: 2, reward: 50) { $0.follows },
-    Mission(id: "tenx", title: "Hit a ×10 slip", goal: 1, reward: 300) { $0.tenX },
+    Mission(id: "play5", title: "Play 5 drives", goal: 5) { $0.drives },
+    Mission(id: "hit2", title: "Hit 2 slips", goal: 2) { $0.hits },
+    Mission(id: "big", title: "Snap a slip with 3+ picks", goal: 1) { $0.bigSlips },
+    Mission(id: "tail", title: "Tail a friend's slip", goal: 1) { $0.tails },
+    Mission(id: "share", title: "Share a slip", goal: 1) { $0.shares },
+    Mission(id: "follow", title: "Follow 2 players", goal: 2) { $0.follows },
+    Mission(id: "tenx", title: "Hit a ×10 slip", goal: 1) { $0.tenX },
 ]
 
 // MARK: - Simulated players, tailing and boards
@@ -77,7 +78,7 @@ extension GameModel {
         for m in order where legs.count < target {
             let yesIsDog = m.open < 50
             let side: Side = (r.next() < bot.dog) == yesIsDog ? .yes : .no
-            if case .success(let trial) = Pricing.tryAdd(Leg(market: m, side: side, price: m.openAsk(side)), to: legs) { legs = trial }
+            if case .success(let trial) = Pricing.tryAdd(Leg(market: m, side: side, price: m.ask(side)), to: legs) { legs = trial }
         }
         return legs
     }
@@ -181,14 +182,26 @@ extension GameModel {
     func canClaim(_ m: Mission) -> Bool { progress(m) >= m.goal && !day.claimed.contains(m.id) }
     var claimable: Int { missions.filter(canClaim).count }
 
+    /// The server pays the reward (once per mission per day) and sends back the new balance.
     func claim(_ m: Mission) {
-        guard canClaim(m) else { return }
-        day.claimed.append(m.id)
-        bank += Double(m.reward)
-        winPulse += 1
-        show("+\(trophies(Double(m.reward))) and 50 XP")
-        gainXP(50)
-        save()
+        guard canClaim(m), debounce("claim:\(m.id)") else { return }
+        Task {
+            do {
+                let r = try await api.claim(ClaimRequest(mission: m.id, day: day.date))
+                day.claimed.append(m.id)
+                bank = Double(r.balance)
+                winPulse += 1
+                show("+\(trophies(Double(m.reward))) and 50 XP")
+                gainXP(50)
+                save()
+            } catch let f as ClashAPI.Failure where f.status == 409 {
+                day.claimed.append(m.id)   // already paid, say on another install
+                save()
+                show(f.message)
+            } catch {
+                show((error as? ClashAPI.Failure)?.message ?? "Couldn't reach the server. Try again.")
+            }
+        }
     }
 
     /// Level n starts at 60 × (n − 1)² XP, so each level takes a little longer than the last.

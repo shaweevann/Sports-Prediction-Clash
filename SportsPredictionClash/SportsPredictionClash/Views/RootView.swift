@@ -25,6 +25,8 @@ struct RootView: View {
                     LiveView(insets: insets, showFriends: $showFriends)
                 case .final:
                     FinalView(insets: insets)
+                case .offline:
+                    OfflineView()
                 }
             }
             .overlay(alignment: .top) {
@@ -94,6 +96,24 @@ struct StadiumBackground: View {
         Color(red: 0.14, green: 0.02, blue: 0.05), Color(red: 0.48, green: 0.08, blue: 0.15), Color(red: 0.07, green: 0.01, blue: 0.03),
         Color(red: 0.30, green: 0.18, blue: 0.03), Color(red: 0.05, green: 0.01, blue: 0.02), Color(red: 0.36, green: 0.05, blue: 0.11),
     ]
+}
+
+/// Shown when the game server can't be reached: the app no longer plays drives on its own.
+struct OfflineView: View {
+    @Environment(GameModel.self) private var model
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Label("Offline", systemImage: "wifi.slash").font(.footnote.weight(.semibold))
+            Text("Can't reach the game").font(.system(size: 30, weight: .bold))
+            Text(model.offlineMessage).foregroundStyle(.secondary)
+            BrandButton(title: "Try again") { model.retry() }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassEffect(.regular, in: .rect(cornerRadius: 34))
+        .padding(.horizontal, 16)
+    }
 }
 
 // MARK: - Shared bits

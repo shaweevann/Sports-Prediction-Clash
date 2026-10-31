@@ -88,25 +88,27 @@ final class Market: Identifiable {
     var mid: Double
     var hist: [Double]
     var vol: Int
+    /// Prices are set when the market opens and hold until the snap. The line still drifts on screen, but every
+    /// player pays the price the server accepts, and nobody can wait for a drift below the fair price.
+    let yesPrice: Int, noPrice: Int
 
-    init(def: MarketDef, line: Int, test: @escaping (DriveStats) -> Bool, bits: [UInt8], p: Double, mid: Double, vol: Int) {
+    init(def: MarketDef, line: Int, test: @escaping (DriveStats) -> Bool, bits: [UInt8], p: Double, mid: Double, vol: Int,
+         prices: (yes: Int, no: Int)? = nil) {
         id = def.id; tag = def.tag; rule = def.rule
         question = def.question(line)
         kind = def.stat != nil ? (def.monotonic ? .over : .end) : def.kind
         self.line = line; stat = def.stat; self.test = test
         self.bits = bits; self.p = p
         self.mid = mid; open = mid; hist = [mid]; self.vol = vol
+        let ask = prices ?? Market.openPrices(mid: mid, p: p)
+        yesPrice = ask.yes; noPrice = ask.no
     }
 
-    /// Asks never dip below the model's fair price plus half a cent: the market still drifts, but a player
-    /// watching the fair line can't pick up free edge when the price wanders under it.
-    var yesAsk: Int { min(99, Int(ceil(max(mid + 1, p * 100 + 0.5)))) }
-    var noAsk: Int { min(99, Int(ceil(max(100 - mid + 1, (1 - p) * 100 + 0.5)))) }
-    func ask(_ side: Side) -> Int { side == .yes ? yesAsk : noAsk }
-    /// Opening price, used by simulated players so their slips match on every device.
-    func openAsk(_ side: Side) -> Int {
-        min(99, Int(ceil(max((side == .yes ? open : 100 - open) + 1, (side == .yes ? p : 1 - p) * 100 + 0.5))))
+    /// Asks never dip below the model's fair price plus half a point, so a drifting line never offers free edge.
+    static func openPrices(mid: Double, p: Double) -> (yes: Int, no: Int) {
+        (min(99, Int(ceil(max(mid + 1, p * 100 + 0.5)))), min(99, Int(ceil(max(100 - mid + 1, (1 - p) * 100 + 0.5)))))
     }
+    func ask(_ side: Side) -> Int { side == .yes ? yesPrice : noPrice }
 
     /// YES outcome as far as the drive has gone: true/false once settled, nil while still open.
     func outcome(_ s: DriveStats, done: Bool) -> Bool? {
@@ -144,17 +146,13 @@ enum FeedBuilder {
         var all: [Market] = []
         for d in marketDefs(offense: offense, defense: defense) {
             var line = d.line
-            var test = d.test ?? { _ in false }
-            if let stat = d.stat {
-                if !d.cands.isEmpty {
-                    line = d.cands.min { a, b in
-                        abs(Double(sims.filter { stat($0) >= a }.count) / Double(samples) - 0.5)
-                            < abs(Double(sims.filter { stat($0) >= b }.count) / Double(samples) - 0.5)
-                    } ?? d.cands[0]
-                }
-                let L = line
-                test = { stat($0) >= L }
+            if let stat = d.stat, !d.cands.isEmpty {
+                line = d.cands.min { a, b in
+                    abs(Double(sims.filter { stat($0) >= a }.count) / Double(samples) - 0.5)
+                        < abs(Double(sims.filter { stat($0) >= b }.count) / Double(samples) - 0.5)
+                } ?? d.cands[0]
             }
+            let test = settle(d, line: line)
             var bits = [UInt8](repeating: 0, count: samples), c = 0
             for i in 0..<samples where test(sims[i]) { bits[i] = 1; c += 1 }
             let p = Double(c) / Double(samples)
@@ -163,6 +161,19 @@ enum FeedBuilder {
             all.append(Market(def: d, line: line, test: test, bits: bits, p: p, mid: mid, vol: Int(900 + rng.next() * rng.next() * 32000)))
         }
         return order(select(all, rng: rng), rng: rng)
+    }
+
+    /// How a market settles at a given line.
+    static func settle(_ d: MarketDef, line: Int) -> (DriveStats) -> Bool {
+        guard let stat = d.stat else { return d.test ?? { _ in false } }
+        return { stat($0) >= line }
+    }
+
+    /// Rebuild a market the server listed, so the app can preview prices and settle legs as plays arrive.
+    static func restore(id: String, line: Int, offense: String, defense: String, bits: [UInt8], p: Double, mid: Double, vol: Int,
+                        prices: (yes: Int, no: Int)) -> Market? {
+        guard let d = marketDefs(offense: offense, defense: defense).first(where: { $0.id == id }) else { return nil }
+        return Market(def: d, line: line, test: settle(d, line: line), bits: bits, p: p, mid: mid, vol: vol, prices: prices)
     }
 
     /// Correlation between two markets and how close any YES/NO combo is to impossible.

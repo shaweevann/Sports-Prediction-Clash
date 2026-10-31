@@ -146,6 +146,8 @@ private struct PhasePill: View {
                 Text("\(Text("Drive over").bold()) · \(model.lastResult)")
             case .final:
                 Text("Final").bold()
+            case .offline:
+                Text("Offline").bold()
             }
         }
         .font(.caption.weight(.medium))

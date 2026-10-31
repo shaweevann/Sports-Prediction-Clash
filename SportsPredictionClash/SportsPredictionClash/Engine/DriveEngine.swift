@@ -69,7 +69,7 @@ enum DriveResult: String, Codable {
 }
 
 /// Everything a market can settle on, counted over one drive. yl = yards from the offense's own goal line.
-struct DriveStats {
+struct DriveStats: Codable {
     var plays = 0, passes = 0, runs = 0, yards = 0, firstDowns = 0
     var sacks = 0, pens = 0, offPens = 0, defPens = 0, tfl = 0
     var maxGain = 0, longPass = 0, longRun = 0
@@ -82,9 +82,9 @@ struct DriveStats {
     var result: DriveResult = .none
 }
 
-enum PlayTag { case plain, good, bad, score, pen }
+enum PlayTag: String, Codable { case plain, good, bad, score, pen }
 
-struct PlayEvent: Identifiable {
+struct PlayEvent: Identifiable, Codable {
     let id: Int
     let text: String
     let tag: PlayTag

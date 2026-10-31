@@ -40,7 +40,7 @@ struct SlipBar: View {
                 }
                 Spacer(minLength: 0)
                 BrandButton(title: primaryTitle, action: primary)
-                .disabled(model.phase == .loading || (model.phase == .market && !model.slip.isEmpty && Double(model.stake) > model.bank))
+                .disabled(model.phase == .loading || model.snapping || (model.phase == .market && !model.slip.isEmpty && Double(model.stake) > model.bank))
             }
             Text("Play for trophies · No real money")
                 .font(.caption2).foregroundStyle(.tertiary)
@@ -66,16 +66,18 @@ struct SlipBar: View {
         case .done: return model.summary?.title ?? ""
         case .final: return "Game over"
         case .loading: return "Setting the lines"
+        case .offline: return "Can't reach the server"
         }
     }
 
     private var primaryTitle: String {
         switch model.phase {
-        case .market: model.slip.isEmpty ? "Watch" : "Snap"
+        case .market: model.snapping ? "…" : model.slip.isEmpty ? "Watch" : "Snap"
         case .live: "Skip"
         case .done: model.g.over ? "Final" : "Next"
         case .final: "New"
         case .loading: "…"
+        case .offline: "Retry"
         }
     }
 
@@ -87,6 +89,7 @@ struct SlipBar: View {
         case .done: if model.g.over { model.showFinal() } else { model.next() }
         case .final: model.newGame()
         case .loading: break
+        case .offline: model.retry()
         }
     }
 }

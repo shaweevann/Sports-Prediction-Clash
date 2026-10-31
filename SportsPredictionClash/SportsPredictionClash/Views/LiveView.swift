@@ -329,11 +329,9 @@ struct FinalView: View {
             Text("\(winner), \(max(a, b))–\(min(a, b))").font(.system(size: 32, weight: .bold))
             Text(trophies(model.bank)).font(.system(size: 56, weight: .bold, design: .rounded)).monospacedDigit().foregroundStyle(Brand.goldInk)
             Text("Trophies after the game · \(model.wins) slips hit, \(model.losses) busted.").foregroundStyle(.secondary)
-            Text(model.isReplay
-                 ? "A replay of this game is unranked: your first result on each drive is the one on the leaderboard. The next ranked game starts at \(next)."
-                 : "A new ranked game is ready.")
+            Text(model.isReplay ? "The next game starts at \(next)." : "A new game is ready.")
                 .font(.subheadline).foregroundStyle(.secondary)
-            BrandButton(title: model.isReplay ? "Replay" : "Play the new game") { model.newGame() }
+            BrandButton(title: model.isReplay ? "Check for a new game" : "Play the new game") { model.newGame() }
         }
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)

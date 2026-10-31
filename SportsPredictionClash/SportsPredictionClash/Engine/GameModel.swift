@@ -10,22 +10,7 @@ let teams = [
     Team(abbr: "IRN", name: "Pines", color: Color(red: 0.91, green: 0.45, blue: 0.18)),
 ]
 
-/// One shared game per two-hour window: everyone in the window plays the same seeded game at their own pace.
-let gameWindow: TimeInterval = 2 * 3600
-func currentGameId() -> String { "g\(Int(Date().timeIntervalSince1970 / gameWindow))" }
-func gameStart(_ id: String) -> Date { Date(timeIntervalSince1970: Double(Int(id.dropFirst()) ?? 0) * gameWindow) }
-func gameLabel(_ id: String) -> String {
-    let f = Date.FormatStyle().hour()
-    let s = gameStart(id)
-    return "\(s.formatted(f))–\(s.addingTimeInterval(gameWindow).formatted(f)) game"
-}
-
-struct GameState: Codable {
-    var score = [0, 0], qtr = 1, clock = 900, off = 0, yl = 25, drive = 1, firstReceiver = 0, over = false
-    var gameId = currentGameId()
-}
-
-enum Phase { case loading, market, live, done, final }
+enum Phase { case loading, market, live, done, final, offline }
 enum BoardScope: String, Codable { case global, friends }
 
 struct DriveSummary {
@@ -131,13 +116,21 @@ final class GameModel {
     var showTail = false
     var showProgress = false
 
+    // Server
+    var snapping = false
+    var offlineMessage = ""
+    @ObservationIgnored let api = ClashAPI()
+
     @ObservationIgnored private var tickTask: Task<Void, Never>?
     @ObservationIgnored private var liveTask: Task<Void, Never>?
     @ObservationIgnored private var outcome: DriveOutcome?
-    @ObservationIgnored private var playRng: RNG?
+    /// The server's answer to the snap: the drive it played and how the slip settled.
+    @ObservationIgnored private var reply: SnapReply?
     @ObservationIgnored private var shown = 0
     @ObservationIgnored private var toastTask: Task<Void, Never>?
     @ObservationIgnored private var lastTap: (key: String, at: Date) = ("", .distantPast)
+
+    init() { load() }
 
 
     // MARK: Derived
@@ -223,19 +216,20 @@ final class GameModel {
     // MARK: Markets phase
 
     func start() async {
-        if g.over { phase = .final; return }
         await openMarkets()
     }
 
+    /// Fetches this drive's feed from the server, which also says where the game stands and how many trophies you have.
     func openMarkets() async {
-        if g.over { phase = .final; return }
         phase = .loading
         slip = []; notes = [:]; summary = nil; pbp = []; view = nil; page = 0
-        let start = DriveStart(yl: g.yl, qtr: g.qtr, clock: g.clock, trailing: g.score[g.off] < g.score[1 - g.off])
-        let seed = "\(g.gameId):\(g.drive):markets", o = offense.abbr, d = defense.abbr
-        markets = await Task.detached(priority: .userInitiated) {
-            FeedBuilder.build(start: start, offense: o, defense: d, seed: seed)
-        }.value
+        let feed: FeedReply
+        do { feed = try await api.feed() } catch { goOffline(error); return }
+        g = feed.game
+        bank = Double(feed.balance)
+        if g.over { phase = .final; return }
+        let o = offense.abbr, d = defense.abbr
+        markets = feed.markets.compactMap { Market.from($0, offense: o, defense: d) }
         timeLeft = Self.marketSeconds
         rollDay()
         planBots()
@@ -249,8 +243,9 @@ final class GameModel {
                 n += 1
                 if n % 4 == 0 { self.markets.forEach { $0.tick() } }
                 if n % 3 == 0 {
-                    self.timeLeft -= 1
-                    if self.timeLeft <= 0 { self.snap(); return }
+                    self.timeLeft = max(0, self.timeLeft - 1)
+                    // Keeps trying each second if the server can't be reached at the snap
+                    if self.timeLeft == 0 && !self.snapping { self.snap() }
                 }
             }
         }
@@ -297,20 +292,43 @@ final class GameModel {
 
     // MARK: Live phase
 
+    /// Sends the slip to the server, which checks it, takes the stake and plays the drive. The app then shows
+    /// that drive play by play.
     func snap() {
-        guard phase == .market else { return }
+        guard phase == .market, !snapping else { return }
         if !slip.isEmpty && Double(stake) > bank { show("Not enough trophies. Lower your stake first."); return }
+        snapping = true
+        let req = SnapRequest(gameId: g.gameId, drive: g.drive, stake: stake, legs: slip.map { LegDTO(market: $0.market.id, side: $0.side) })
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let r = try await self.api.snap(req)
+                self.snapping = false
+                self.startLive(r)
+            } catch let f as ClashAPI.Failure where f.status != 0 && f.status != 500 {
+                // Refused (a stale drive, a slip the server won't take): show why and reload the drive
+                self.snapping = false
+                self.show(f.message)
+                if f.status == 409 { await self.openMarkets() } else if self.timeLeft == 0 { self.timeLeft = 15 }
+            } catch {
+                self.snapping = false
+                self.show("Couldn't reach the server. Trying again.")
+                if self.timeLeft == 0 { self.timeLeft = 5 }
+            }
+        }
+    }
+
+    private func startLive(_ r: SnapReply) {
         tickTask?.cancel()
-        if !slip.isEmpty { bank -= Double(stake) }
+        reply = r
+        if !slip.isEmpty { bank -= Double(stake) }   // the server's balance lands at the whistle
         progressOnSnap()
         for i in slip.indices { slip[i].won = nil }
         // Lock the slip in at the snap, so seeing the drive and replaying can't change this drive's ranked result
-        record(key, DriveEntry(sig: slipSig, mult: slip.isEmpty ? 0 : math.mult, picks: slip.count, won: false,
+        record(key, DriveEntry(sig: slipSig, mult: r.slip?.mult ?? 0, picks: slip.count, won: false,
                                stake: slip.isEmpty ? 0 : stake, payout: 0, pending: true), settle: false)
-        let start = DriveStart(yl: g.yl, qtr: g.qtr, clock: g.clock, trailing: g.score[g.off] < g.score[1 - g.off])
-        let rng = RNG("\(g.gameId):\(g.drive):play")
-        let out = DriveEngine.simulate(start, rng: rng, record: true)
-        outcome = out; playRng = rng; shown = 0; pbp = []
+        outcome = DriveOutcome(stats: r.stats, log: r.log, yl: r.yl, qtr: r.qtr, clock: r.clock)
+        shown = 0; pbp = []
         phase = .live
         save()
         liveTask?.cancel()
@@ -345,21 +363,25 @@ final class GameModel {
     }
 
     private func finish(_ out: DriveOutcome) {
+        guard let r = reply else { return }
         let driveNo = g.drive, k = key, offAbbr = offense.abbr
         let st = out.stats
-        afterNote = applyDrive(out)
+        afterNote = r.after
+        g = r.game
         lastResult = st.result.label
         if !afterNote.isEmpty {
             pbp.insert(PlayEvent(id: -1, text: afterNote, tag: .plain, yl: g.yl, down: 1, dist: 10, clock: g.clock, qtr: g.qtr, stats: st), at: 0)
         }
         let line = "\(offAbbr): \(st.result.label) · \(st.plays) plays, \(st.yards) yds, \(fmtClock(st.time))"
-        let m = math.mult
-        let won = !slip.isEmpty && slip.allSatisfy { $0.won == true }
+        // The server settled the slip; the app's own leg-by-leg marks are only for the show
+        let m = r.slip?.mult ?? 0
+        let won = r.slip?.won ?? false
+        bank = Double(r.balance)
         if slip.isEmpty {
             summary = DriveSummary(title: st.result.label, detail: "", line: line, won: nil)
         } else if won {
-            let win = payout(stake, m)
-            bank += win; wins += 1; winPulse += 1
+            let win = Double(r.slip?.payout ?? 0)
+            wins += 1; winPulse += 1
             summary = DriveSummary(title: "Slip hits +\(trophies(win))", detail: slip.count == 1 ? "Your pick landed at ×\(Pricing.fmt(m))." : "All \(slip.count) picks landed at ×\(Pricing.fmt(m)).", line: line, won: true)
         } else {
             losses += 1
@@ -367,12 +389,12 @@ final class GameModel {
             summary = DriveSummary(title: "Busted −\(trophies(Double(stake)))", detail: "Missed: \(missed).", line: line, won: false)
         }
         record(k, DriveEntry(sig: slipSig, mult: m, picks: slip.count, won: won, stake: slip.isEmpty ? 0 : stake,
-                             payout: won ? payout(stake, m) : 0, pending: false), settle: true)
+                             payout: Double(r.slip?.payout ?? 0), pending: false), settle: true)
         settleBots(k, st)
         progressOnFinish(hadSlip: !slip.isEmpty, won: won, mult: m)
         boardKey = k; boardDrive = driveNo
         phase = .done
-        if bank < 10 { bank = 1000; show("Out of trophies, so here's 🏆 1,000 to get back in.") }
+        if r.reloaded { show("Out of trophies, so here's 🏆 1,000 to get back in.") }
         save()
     }
 
@@ -380,52 +402,24 @@ final class GameModel {
         Task { await openMarkets() }
     }
 
-    /// Score, possession and clock after a drive. Uses the drive's own RNG stream so it matches for every player.
-    private func applyDrive(_ out: DriveOutcome) -> String {
-        let rng = playRng ?? RNG(key)
-        let off = g.off, def = 1 - off, st = out.stats, yl = out.yl
-        g.qtr = out.qtr; g.clock = out.clock
-        var next = 25, note = ""
-        func kick() -> Int {
-            g.clock = max(0, g.clock - 5)
-            if rng.next() < 0.68 { note += " Kickoff, touchback."; return 25 }
-            let y = clamp(Int((24 + rng.normal() * 8).rounded()), 8, 60)
-            note += " Kickoff returned to the \(y)."
-            return y
-        }
-        switch st.result {
-        case .td:
-            let xp = rng.next() < 0.95
-            g.score[off] += xp ? 7 : 6
-            note = "Extra point \(xp ? "is good" : "is missed")."
-            next = kick()
-        case .fg: g.score[off] += 3; next = kick()
-        case .miss: next = max(20, 100 - (yl - 7)); note = "\(teams[def].abbr) take over at the spot of the kick."
-        case .punt:
-            let spot = yl + st.punt
-            next = spot >= 100 ? 20 : 100 - spot
-            note = spot >= 100 ? "Punt sails into the end zone. Touchback." : "\(teams[def].abbr) fair catch."
-        case .int: next = clamp(100 - yl - Int((8 + rng.normal() * 8).rounded()), 5, 95); note = "\(teams[def].abbr) return it."
-        case .fum, .downs: next = 100 - yl
-        case .safety: g.score[def] += 2; next = clamp(Int((38 + rng.normal() * 8).rounded()), 20, 60); note = "Free kick after the safety."
-        case .half, .none: break
-        }
-        g.off = def; g.yl = next; g.drive += 1
-        if st.result == .half || g.clock <= 0 {
-            if g.qtr >= 4 { g.over = true; note += " Final whistle." }
-            else if g.qtr == 2 { g.qtr = 3; g.clock = 900; g.off = 1 - g.firstReceiver; g.yl = 25; note += " Halftime. \(teams[g.off].abbr) receive to open the 3rd." }
-            else { g.qtr += 1; g.clock = 900 }
-        }
-        return note.trimmingCharacters(in: .whitespaces)
-    }
-
     func showFinal() { phase = .final }
 
+    /// True while the finished game's window is still open; the server starts the next game when it closes.
     var isReplay: Bool { currentGameId() == g.gameId }
 
     func newGame() {
-        g = GameState()
-        save()
+        Task { await openMarkets() }
+    }
+
+    // MARK: Server trouble
+
+    private func goOffline(_ error: Error) {
+        offlineMessage = (error as? ClashAPI.Failure)?.message
+            ?? "The game server isn't answering. Start it on your Mac, then tap Try again."
+        phase = .offline
+    }
+
+    func retry() {
         Task { await openMarkets() }
     }
 
